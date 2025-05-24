@@ -1,0 +1,49 @@
+---
+export const prerender = true; 
+import ImageFeatureSlider from "@/components/Product/ImageFeatureSlider.astro";
+import ProductCardPrice from "@/components/Product/ProductCardPrice.astro";
+import ProductDescription from "@/components/Product/ProductDescription.astro";
+import ProductDetails from "@/components/Product/ProductDetails.astro";
+import ProductSpecs from "@/components/Product/ProductSpecs.astro";
+import AddToCartButton from "@/components/ui/AddToCartButton.astro";
+import Container from "@/components/ui/Container.astro";
+import Heading from "@/components/ui/Heading.astro";
+import Layout from "@/layouts/Layout.astro";
+import type { GetStaticPaths } from "astro";
+import { getCollection, type CollectionEntry } from "astro:content";
+
+export const getStaticPaths: GetStaticPaths = async () => {
+  const products = await getCollection("products");
+  return products.map((product) => ({
+    params: {
+      id: product.data.slug,
+    },
+    props: { product },
+  }));
+};
+
+type Props = { product: CollectionEntry<"products"> };
+const { product } = Astro.props;
+const { data } = product;
+---
+
+<Layout>
+  <Container width="marginxy">
+    <div class="grid lg:grid-cols-2 gap-8">
+      <ImageFeatureSlider subDirectory={data.images} />
+      <div class="space-y-10">
+        <Heading size="xl" class="mb-10">{data.name}</Heading>
+        <ProductDescription description={data.description} />
+        <ProductDetails product={data} />
+        <ProductSpecs product={data} />
+        <ProductCardPrice product={data} />
+        <AddToCartButton
+          id={data.id}
+          name={data.name}
+          price={data.mrp}
+          image={data.images}
+        />
+      </div>
+    </div>
+  </Container>
+</Layout>

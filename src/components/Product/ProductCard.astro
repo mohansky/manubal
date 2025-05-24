@@ -1,0 +1,105 @@
+---
+// src/components/ProductCard.astro - Updated with Cart Functionality
+import AddToCartButton from "../AddToCartButton.astro";
+import Heading from "../ui/Heading.astro";
+import Paragraph from "../ui/Paragraph.astro";
+import ImageFeatureSlider from "./ImageFeatureSlider.astro";
+import ProductCardPrice from "./ProductCardPrice.astro";
+
+interface Props {
+  id: number;
+  slugAsParams?: string;
+  slug: string;
+  published: boolean;
+  name: string;
+  quantity?: number;
+  dimensions: string;
+  weight: number;
+  artisan: string;
+  code: string;
+  description: string;
+  images?: string;
+  subDirectory?: string;
+  category: string;
+  material: string;
+  colour: string | string[];
+  mrp: number;
+  gst?: number;
+  courier?: string | null;
+  total?: number;
+  sku?: string | null;
+  barcode?: string | null;
+}
+const {
+  id,
+  slug,
+  images,
+  subDirectory,
+  name,
+  category,
+  description,
+  total,
+  mrp,
+} = Astro.props;
+const categoryClass =
+  category === "Macrame"
+    ? "badge-error"
+    : category === "Stitching"
+      ? "badge-accent"
+      : "";
+
+// Calculate the image path for the cart
+const imagePath = images ? `/products/${images}/1.jpg` : undefined;
+---
+
+<div class="card bg-base-100">
+  <a href={slug} class="product-link">
+    <figure class="relative">
+      <ImageFeatureSlider subDirectory={images} />
+      <div class={`badge absolute bottom-2 right-2 z-10 ${categoryClass}`}>
+        {category}
+      </div>
+    </figure>
+    <div class="card-body">
+      <div class="tooltip" data-tip={name}>
+        <Heading class="card-title line-clamp-1" size="sm">{name}</Heading>
+      </div>
+      <Paragraph class="line-clamp-3 mb-2">
+        {description}
+      </Paragraph>
+      <ProductCardPrice total={total} />
+      <div class="card-actions justify-evenly">
+        <a href={slug} class="btn btn-outline"> View Details </a>
+        <AddToCartButton
+          id={id}
+          name={name}
+          price={mrp}
+          image={imagePath}
+        />
+      </div>
+    </div>
+  </a>
+</div>
+
+<script>
+  function initProductCards() {
+    // Fix links so Add to Cart button doesn't trigger navigation
+    document.querySelectorAll(".product-link").forEach((card) => {
+      card.addEventListener("click", (e) => {
+        // If the click is on or inside the add-to-cart button, don't navigate
+        if (
+          e.target instanceof Element &&
+          (e.target.closest(".add-to-cart") || e.target.closest(".btn-outline"))
+        ) {
+          e.preventDefault();
+        }
+      });
+    });
+  }
+
+  // Initialize when DOM is ready
+  document.addEventListener("DOMContentLoaded", initProductCards);
+
+  // For Astro View Transitions
+  document.addEventListener("astro:page-load", initProductCards);
+</script>

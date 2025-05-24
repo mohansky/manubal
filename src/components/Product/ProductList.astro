@@ -1,0 +1,39 @@
+---
+import type { CollectionEntry } from "astro:content"; 
+import ProductCard from "./ProductCard.astro";
+
+interface Props {
+  products: CollectionEntry<'products'>[];
+}
+
+const { products } = Astro.props;
+---
+
+<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+  {
+    products.map((product) => (
+      <ProductCard
+        id={product.data.id}
+        slug={`/shop/${product.data.slug}`}
+        published={product.data.published}
+        name={product.data.name}
+        quantity={product.data.quantity}
+        dimensions={product.data.dimensions}
+        weight={product.data.weight}
+        artisan={product.data.artisan}
+        code={product.data.code}
+        description={product.data.description}
+        images={product.data.images} 
+        category={product.data.category}
+        material={product.data.material}
+        colour={product.data.colour}
+        mrp={product.data.mrp}
+        gst={product.data.gst}
+        courier={product.data.courier}
+        total={product.data.total}
+        sku={product.data.sku}
+        barcode={product.data.barcode}
+      />
+    ))
+  }
+</div>

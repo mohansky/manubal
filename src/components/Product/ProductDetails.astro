@@ -1,0 +1,31 @@
+---
+import Paragraph from "../ui/Paragraph.astro";
+
+interface Product {
+  category: string;
+  material: string;
+  colour: string | string[];
+}
+
+interface Props {
+  product: Product;
+}
+
+const { product } = Astro.props;
+const { colour, category, material } = product;
+---
+
+<div class="flex gap-4">
+  <Paragraph>
+    <b>Category:</b>
+    {category}
+  </Paragraph>
+  <Paragraph>
+    <b>Material:</b>
+    {material}
+  </Paragraph>
+  <Paragraph>
+    <b>Colour:</b>
+    {colour}
+  </Paragraph>
+</div>

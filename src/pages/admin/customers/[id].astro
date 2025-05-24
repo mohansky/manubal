@@ -1,0 +1,940 @@
+---
+// src/pages/admin/cutomers/[id].astro
+import Container from "@/components/ui/Container.astro";
+import Heading from "@/components/ui/Heading.astro";
+import Layout from "@/layouts/Layout.astro";
+import ProfileLayout from "@/layouts/ProfileLayout.astro";
+import { getCustomerById } from "@/lib/customers";
+
+// Get customer ID from URL
+const { id } = Astro.params;
+const customerId = parseInt(id || "0");
+
+// Fetch customer details
+const customer = await getCustomerById(customerId);
+
+// Redirect if customer not found
+if (!customer) {
+  return Astro.redirect("/admin/customers");
+}
+
+// Format date
+function formatDate(dateString: string) {
+  const date = new Date(dateString);
+  return date.toLocaleString("en-IN", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+// Format currency
+function formatCurrency(amount: number) {
+  return `₹${amount.toFixed(2)}`;
+}
+
+// Calculate total spent
+const totalSpent = customer.orders.reduce((sum, order) => sum + order.total, 0);
+
+// Status badge colors
+const statusColors: Record<string, string> = {
+  pending: "badge-warning",
+  processing: "badge-info",
+  shipped: "badge-success",
+  delivered: "badge-accent",
+  cancelled: "badge-error",
+};
+
+// Function to get status color with fallback
+function getStatusColor(status: string): string {
+  return statusColors[status] || "bg-gray-100 text-gray-800";
+}
+---
+
+<Layout>
+  <ProfileLayout title={`${customer.firstName} ${customer.lastName}`}>
+    <Container width="marginy">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* <!-- Customer Information --> */}
+        <div class="lg:col-span-1">
+          <div class="card bg-base-100 shadow-sm">
+            <div class="card-body">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                  <div class="avatar avatar-placeholder">
+                    <div
+                      class="ring-primary ring-offset-base-100 w-20 rounded-full ring-[0.5px] mr-4"
+                    >
+                      <span class="text-gray-500 font-light">
+                        {customer.firstName[0]}
+                        {customer.lastName[0]}
+                      </span>
+                    </div>
+                  </div>
+                  <div>
+                    <h3 class="card-title">
+                      {customer.firstName}
+                      {customer.lastName}
+                    </h3>
+                    <p class="text-sm text-base-content/70">
+                      Customer since {
+                        formatDate(customer.createdAt).split(",")[0]
+                      }
+                    </p>
+                  </div>
+                </div>
+                <div class="flex gap-2">
+                  <div class="dropdown dropdown-end">
+                    <div
+                      tabindex="0"
+                      role="button"
+                      class="btn btn-ghost btn-sm"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="h-4 w-4"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
+                        ></path>
+                      </svg>
+                    </div>
+                    <ul
+                      tabindex="0"
+                      class="dropdown-content menu bg-base-100 rounded-box z-[1] w-44 p-2 shadow space-y-3"
+                    >
+                      <li>
+                        <button
+                          id="edit-customer-btn"
+                          class="btn btn-info btn-sm"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            class="h-4 w-4"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                            ></path>
+                          </svg>
+                          Edit
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          id="delete-customer-btn"
+                          class="btn btn-error btn-sm"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            class="h-4 w-4"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                            ></path>
+                          </svg>
+                          Delete Customer
+                        </button>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card-body p-0">
+              <!-- View Mode -->
+              <div id="customer-view-mode">
+                <dl class="space-y-1">
+                  <div class="grid grid-cols-3 bg-base-200 p-5">
+                    <dt
+                      class="col-span-1 text-sm font-semibold text-base-content/70"
+                    >
+                      Email
+                    </dt>
+                    <dd class="col-span-2">
+                      <a
+                        href={`mailto:${customer.email}`}
+                        class="link link-hover link-neutral"
+                      >
+                        {customer.email}
+                      </a>
+                    </dd>
+                  </div>
+
+                  <div class="grid grid-cols-3 bg-base-200/20 p-5">
+                    <dt
+                      class="col-span-1 text-sm font-semibold text-base-content/70"
+                    >
+                      Phone No.
+                    </dt>
+                    <dd class="col-span-2">
+                      <a
+                        href={`tel:${customer.phoneNumber}`}
+                        class="link link-hover link-neutral"
+                      >
+                        {customer.phoneNumber || "Not provided"}
+                      </a>
+                    </dd>
+                  </div>
+
+                  <div class="grid grid-cols-3 bg-base-200 p-5">
+                    <dt
+                      class="col-span-1 text-sm font-semibold text-base-content/70"
+                    >
+                      Address
+                    </dt>
+                    <dd class="col-span-2">
+                      {customer.address}<br />
+                      {customer.city}, {customer.state}
+                      {customer.zipCode}
+                    </dd>
+                  </div>
+
+                  <div class="grid grid-cols-3 bg-base-200/20 p-5">
+                    <dt
+                      class="col-span-1 text-sm font-semibold text-base-content/70"
+                    >
+                      Orders
+                    </dt>
+                    <dd class="col-span-2">
+                      {customer.orders.length}
+                    </dd>
+                  </div>
+
+                  <div class="grid grid-cols-3 bg-base-200 p-5">
+                    <dt
+                      class="col-span-1 text-sm font-semibold text-base-content/70"
+                    >
+                      Total Spent
+                    </dt>
+                    <dd class="col-span-2 font-medium">
+                      {formatCurrency(totalSpent)}
+                    </dd>
+                  </div>
+                </dl>
+              </div>
+
+              <!-- Edit Mode -->
+              <div id="customer-edit-mode" class="hidden">
+                <form id="customer-edit-form" class="p-5 space-y-4">
+                  <div class="form-control">
+                    <label class="label">
+                      <span class="label-text">First Name</span>
+                    </label>
+                    <input
+                      type="text"
+                      name="firstName"
+                      value={customer.firstName}
+                      class="input input-bordered input-sm"
+                      required
+                    />
+                  </div>
+
+                  <div class="form-control">
+                    <label class="label">
+                      <span class="label-text">Last Name</span>
+                    </label>
+                    <input
+                      type="text"
+                      name="lastName"
+                      value={customer.lastName}
+                      class="input input-bordered input-sm"
+                      required
+                    />
+                  </div>
+
+                  <div class="form-control">
+                    <label class="label">
+                      <span class="label-text">Email</span>
+                    </label>
+                    <input
+                      type="email"
+                      name="email"
+                      value={customer.email}
+                      class="input input-bordered input-sm"
+                      required
+                    />
+                  </div>
+
+                  <div class="form-control">
+                    <label class="label">
+                      <span class="label-text">Phone Number</span>
+                    </label>
+                    <input
+                      type="tel"
+                      name="phoneNumber"
+                      value={customer.phoneNumber}
+                      class="input input-bordered input-sm"
+                      placeholder="Enter phone number"
+                    />
+                  </div>
+
+                  <div class="form-control">
+                    <label class="label">
+                      <span class="label-text">Address</span>
+                    </label>
+                    <input
+                      type="text"
+                      name="address"
+                      value={customer.address}
+                      class="input input-bordered input-sm"
+                      required
+                    />
+                  </div>
+
+                  <div class="form-control">
+                    <label class="label">
+                      <span class="label-text">City</span><br /></label
+                    >
+                  </div>
+                  <input
+                    type="text"
+                    name="city"
+                    value={customer.city}
+                    class="input input-bordered input-sm"
+                    required
+                  />
+                </form>
+
+                <div class="form-control">
+                  <label class="label">
+                    <span class="label-text">State</span>
+                  </label>
+                  <select
+                    name="state"
+                    class="select select-bordered select-sm"
+                    required
+                  >
+                    <option value="">Select a state</option>
+                    <option value="AN" selected={customer.state === "AN"}
+                      >Andaman and Nicobar Islands</option
+                    >
+                    <option value="AP" selected={customer.state === "AP"}
+                      >Andhra Pradesh</option
+                    >
+                    <option value="AR" selected={customer.state === "AR"}
+                      >Arunachal Pradesh</option
+                    >
+                    <option value="AS" selected={customer.state === "AS"}
+                      >Assam</option
+                    >
+                    <option value="BR" selected={customer.state === "BR"}
+                      >Bihar</option
+                    >
+                    <option value="CH" selected={customer.state === "CH"}
+                      >Chandigarh</option
+                    >
+                    <option value="CT" selected={customer.state === "CT"}
+                      >Chhattisgarh</option
+                    >
+                    <option value="DN" selected={customer.state === "DN"}
+                      >Dadra and Nagar Haveli and Daman and Diu</option
+                    >
+                    <option value="DL" selected={customer.state === "DL"}
+                      >Delhi</option
+                    >
+                    <option value="GA" selected={customer.state === "GA"}
+                      >Goa</option
+                    >
+                    <option value="GJ" selected={customer.state === "GJ"}
+                      >Gujarat</option
+                    >
+                    <option value="HR" selected={customer.state === "HR"}
+                      >Haryana</option
+                    >
+                    <option value="HP" selected={customer.state === "HP"}
+                      >Himachal Pradesh</option
+                    >
+                    <option value="JK" selected={customer.state === "JK"}
+                      >Jammu and Kashmir</option
+                    >
+                    <option value="JH" selected={customer.state === "JH"}
+                      >Jharkhand</option
+                    >
+                    <option value="KA" selected={customer.state === "KA"}
+                      >Karnataka</option
+                    >
+                    <option value="KL" selected={customer.state === "KL"}
+                      >Kerala</option
+                    >
+                    <option value="LA" selected={customer.state === "LA"}
+                      >Ladakh</option
+                    >
+                    <option value="LD" selected={customer.state === "LD"}
+                      >Lakshadweep</option
+                    >
+                    <option value="MP" selected={customer.state === "MP"}
+                      >Madhya Pradesh</option
+                    >
+                    <option value="MH" selected={customer.state === "MH"}
+                      >Maharashtra</option
+                    >
+                    <option value="MN" selected={customer.state === "MN"}
+                      >Manipur</option
+                    >
+                    <option value="ML" selected={customer.state === "ML"}
+                      >Meghalaya</option
+                    >
+                    <option value="MZ" selected={customer.state === "MZ"}
+                      >Mizoram</option
+                    >
+                    <option value="NL" selected={customer.state === "NL"}
+                      >Nagaland</option
+                    >
+                    <option value="OR" selected={customer.state === "OR"}
+                      >Odisha</option
+                    >
+                    <option value="PY" selected={customer.state === "PY"}
+                      >Puducherry</option
+                    >
+                    <option value="PB" selected={customer.state === "PB"}
+                      >Punjab</option
+                    >
+                    <option value="RJ" selected={customer.state === "RJ"}
+                      >Rajasthan</option
+                    >
+                    <option value="SK" selected={customer.state === "SK"}
+                      >Sikkim</option
+                    >
+                    <option value="TN" selected={customer.state === "TN"}
+                      >Tamil Nadu</option
+                    >
+                    <option value="TG" selected={customer.state === "TG"}
+                      >Telangana</option
+                    >
+                    <option value="TR" selected={customer.state === "TR"}
+                      >Tripura</option
+                    >
+                    <option value="UP" selected={customer.state === "UP"}
+                      >Uttar Pradesh</option
+                    >
+                    <option value="UT" selected={customer.state === "UT"}
+                      >Uttarakhand</option
+                    >
+                    <option value="WB" selected={customer.state === "WB"}
+                      >West Bengal</option
+                    >
+                  </select>
+                </div>
+
+                <div class="form-control">
+                  <label class="label">
+                    <span class="label-text">Pin Code</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="zipCode"
+                    value={customer.zipCode}
+                    class="input input-bordered input-sm"
+                    required
+                  />
+                </div>
+
+                <div class="flex gap-2 pt-4">
+                  <button
+                    type="submit"
+                    id="save-customer-btn"
+                    class="btn btn-primary btn-sm"
+                  >
+                    Save Changes
+                  </button>
+                  <button
+                    type="button"
+                    id="cancel-edit-btn"
+                    class="btn btn-ghost btn-sm"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Customer Orders -->
+        <div class="lg:col-span-2">
+          <div class="card bg-base-100/20 shadow-sm">
+            <div class="card-body">
+              <Heading size="lg" class="card-title">Order History</Heading>
+              {
+                customer.orders.length === 0 ? (
+                  <div class="p-6 text-center text-gray-500">
+                    No orders found for this customer
+                  </div>
+                ) : (
+                  <div class="overflow-x-auto">
+                    <table class="table">
+                      <thead class="bg-base-200/30">
+                        <tr>
+                          <th
+                            scope="col"
+                            class="text-xs font-medium text-gray-500 uppercase tracking-wider"
+                          >
+                            Order #
+                          </th>
+                          <th
+                            scope="col"
+                            class="text-xs font-medium text-gray-500 uppercase tracking-wider"
+                          >
+                            Date
+                          </th>
+                          <th
+                            scope="col"
+                            class="text-xs font-medium text-gray-500 uppercase tracking-wider"
+                          >
+                            Status
+                          </th>
+                          <th
+                            scope="col"
+                            class="text-xs font-medium text-gray-500 uppercase tracking-wider"
+                          >
+                            Total
+                          </th>
+                          <th
+                            scope="col"
+                            class="text-xs font-medium text-gray-500 uppercase tracking-wider"
+                          >
+                            Actions
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {customer.orders.map((order) => (
+                          <tr class="hover:bg-base-200/30">
+                            <td>#{order.id}</td>
+                            <td>{formatDate(order.date)}</td>
+                            <td>
+                              <span
+                                class={`capitalize badge badge-sm ${getStatusColor(order.status)}`}
+                              >
+                                {order.status}
+                              </span>
+                            </td>
+                            <td>{formatCurrency(order.total)}</td>
+                            <td>
+                              <div class="flex gap-2">
+                                <a
+                                  href={`/admin/orders/${order.id}`}
+                                  class="btn btn-primary btn-sm"
+                                >
+                                  View
+                                </a>
+                                <button
+                                  class="btn btn-error btn-sm delete-order-btn"
+                                  data-order-id={order.id}
+                                  data-customer-name={`${customer.firstName} ${customer.lastName}`}
+                                >
+                                  Delete
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+
+    
+
+    <div class="mt-6">
+      <a href="/admin/customers" class="btn btn-soft btn-sm">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-4 w-4 mr-2"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+        </svg>
+        Back to Customers
+      </a>
+    </div>
+
+    <!-- Delete Customer Confirmation Modal -->
+    <dialog id="delete_customer_modal" class="modal">
+      <div class="modal-box">
+        <h3 class="font-bold text-lg text-error">Delete Customer</h3>
+        <p class="py-4">
+          Are you sure you want to delete <span class="font-semibold"
+            >{customer.firstName} {customer.lastName}</span
+          >?
+          <br /><br />
+          <span class="text-warning"
+            >⚠️ This action cannot be undone and will permanently remove all
+            customer data.</span
+          >
+          <br /><br />
+          <span class="text-sm text-base-content/70"
+            >Note: You can only delete customers who have no orders. Please
+            delete all orders first if any exist.</span
+          >
+        </p>
+        <div class="modal-action">
+          <form method="dialog">
+            <button class="btn">Cancel</button>
+          </form>
+          <button id="confirm-delete-customer-btn" class="btn btn-error"
+            >Delete Customer</button
+          >
+        </div>
+      </div>
+    </dialog>
+
+    <!-- Delete Order Confirmation Modal -->
+    <dialog id="delete_modal" class="modal">
+      <div class="modal-box">
+        <h3 class="font-bold text-lg">Confirm Delete</h3>
+        <p class="py-4">
+          Are you sure you want to delete <span
+            id="delete-order-info"
+            class="font-semibold"></span>? This action cannot be undone.
+        </p>
+        <div class="modal-action">
+          <form method="dialog">
+            <button class="btn">Cancel</button>
+          </form>
+          <button id="confirm-delete-btn" class="btn btn-error"
+            >Delete Order</button
+          >
+        </div>
+      </div>
+    </dialog>
+
+    <!-- Toast Container -->
+    <div class="toast toast-top toast-end z-50" id="toast-container"></div>
+    </Container>
+  </ProfileLayout>
+</Layout>
+
+<script>
+  // Toast notification system
+  class ToastManager {
+    private container: HTMLElement;
+
+    constructor() {
+      this.container =
+        document.getElementById("toast-container") || this.createContainer();
+    }
+
+    private createContainer(): HTMLElement {
+      const container = document.createElement("div");
+      container.id = "toast-container";
+      container.className = "toast toast-top toast-end z-50";
+      document.body.appendChild(container);
+      return container;
+    }
+
+    show(
+      message: string,
+      type: "success" | "error" | "info" | "warning" = "info",
+      duration: number = 4000
+    ): void {
+      const toast = document.createElement("div");
+
+      let alertClass = "";
+      let icon = "";
+
+      switch (type) {
+        case "success":
+          alertClass = "alert-success";
+          icon = `<svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`;
+          break;
+        case "error":
+          alertClass = "alert-error";
+          icon = `<svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`;
+          break;
+        case "warning":
+          alertClass = "alert-warning";
+          icon = `<svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" /></svg>`;
+          break;
+        default:
+          alertClass = "alert-info";
+          icon = `<svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`;
+      }
+
+      toast.className = `alert ${alertClass} shadow-lg mb-2`;
+      toast.innerHTML = `
+        <div class="flex items-center">
+          ${icon}
+          <span class="ml-2">${message}</span>
+        </div>
+        <div class="flex-none">
+          <button class="btn btn-sm btn-ghost btn-circle" onclick="this.closest('.alert').remove()">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      `;
+
+      this.container.appendChild(toast);
+
+      // Auto remove
+      setTimeout(() => {
+        if (toast.parentElement) {
+          toast.remove();
+        }
+      }, duration);
+    }
+  }
+
+  function initCustomerDetailPage() {
+    const toastManager = new ToastManager();
+    const deleteModal = document.getElementById(
+      "delete_modal"
+    ) as HTMLDialogElement;
+    const deleteOrderInfo = document.getElementById("delete-order-info");
+    const confirmDeleteBtn = document.getElementById("confirm-delete-btn");
+
+    // Customer delete elements
+    const deleteCustomerModal = document.getElementById(
+      "delete_customer_modal"
+    ) as HTMLDialogElement;
+    const deleteCustomerBtn = document.getElementById("delete-customer-btn");
+    const confirmDeleteCustomerBtn = document.getElementById(
+      "confirm-delete-customer-btn"
+    );
+
+    // Customer edit elements
+    const editCustomerBtn = document.getElementById("edit-customer-btn");
+    const customerViewMode = document.getElementById("customer-view-mode");
+    const customerEditMode = document.getElementById("customer-edit-mode");
+    const customerEditForm = document.getElementById(
+      "customer-edit-form"
+    ) as HTMLFormElement;
+    const cancelEditBtn = document.getElementById("cancel-edit-btn");
+    const saveCustomerBtn = document.getElementById("save-customer-btn");
+
+    let orderToDelete: { id: number; customerName: string } | null = null;
+
+    // Handle delete customer button
+    deleteCustomerBtn?.addEventListener("click", function () {
+      deleteCustomerModal?.showModal();
+    });
+
+    // Handle confirm delete customer
+    confirmDeleteCustomerBtn?.addEventListener(
+      "click",
+      async function (this: HTMLButtonElement) {
+        // Show loading state
+        this.disabled = true;
+        this.textContent = "Deleting...";
+
+        try {
+          const customerId = window.location.pathname.split("/").pop();
+          const response = await fetch(`/api/customers/${customerId}/delete`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          });
+
+          const result = await response.json();
+
+          if (result.success) {
+            toastManager.show(
+              "Customer deleted successfully! Redirecting...",
+              "success",
+              2000
+            );
+
+            // Close modal
+            deleteCustomerModal?.close();
+
+            // Redirect to customers list after short delay
+            setTimeout(() => {
+              window.location.href = "/admin/customers";
+            }, 2000);
+          } else {
+            throw new Error(result.error || "Failed to delete customer");
+          }
+        } catch (error: any) {
+          console.error("Delete customer error:", error);
+          toastManager.show(
+            error.message || "Failed to delete customer. Please try again.",
+            "error"
+          );
+        } finally {
+          // Reset button state
+          this.disabled = false;
+          this.textContent = "Delete Customer";
+        }
+      }
+    );
+
+    // Handle edit customer button
+    editCustomerBtn?.addEventListener("click", function () {
+      customerViewMode?.classList.add("hidden");
+      customerEditMode?.classList.remove("hidden");
+    });
+
+    // Handle cancel edit
+    cancelEditBtn?.addEventListener("click", function () {
+      customerEditMode?.classList.add("hidden");
+      customerViewMode?.classList.remove("hidden");
+
+      // Reset form to original values
+      customerEditForm?.reset();
+    });
+
+    // Handle save customer
+    customerEditForm?.addEventListener("submit", async function (e) {
+      e.preventDefault();
+
+      const saveBtn = saveCustomerBtn as HTMLButtonElement;
+      if (!saveBtn) return;
+
+      // Show loading state
+      const originalText = saveBtn.textContent;
+      saveBtn.disabled = true;
+      saveBtn.textContent = "Saving...";
+
+      try {
+        const formData = new FormData(customerEditForm);
+        const customerData: Record<string, string> = {};
+
+        formData.forEach((value, key) => {
+          customerData[key] = value.toString();
+        });
+
+        const response = await fetch(
+          `/api/customers/${window.location.pathname.split("/").pop()}/update`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(customerData),
+          }
+        );
+
+        const result = await response.json();
+
+        if (result.success) {
+          toastManager.show("Customer updated successfully!", "success");
+
+          // Switch back to view mode
+          customerEditMode?.classList.add("hidden");
+          customerViewMode?.classList.remove("hidden");
+
+          // Reload page after short delay to show updated data
+          setTimeout(() => {
+            window.location.reload();
+          }, 1000);
+        } else {
+          throw new Error(result.error || "Failed to update customer");
+        }
+      } catch (error: any) {
+        console.error("Update customer error:", error);
+        toastManager.show(
+          error.message || "Failed to update customer. Please try again.",
+          "error"
+        );
+      } finally {
+        // Reset button state
+        saveBtn.disabled = false;
+        saveBtn.textContent = originalText;
+      }
+    });
+
+    // Handle delete button clicks
+    document.querySelectorAll(".delete-order-btn").forEach((button) => {
+      button.addEventListener("click", function (this: HTMLButtonElement) {
+        const orderId = this.getAttribute("data-order-id");
+        const customerName = this.getAttribute("data-customer-name");
+
+        if (orderId && customerName && deleteOrderInfo) {
+          orderToDelete = { id: parseInt(orderId), customerName };
+          deleteOrderInfo.textContent = `Order #${orderId} for ${customerName}`;
+          deleteModal?.showModal();
+        }
+      });
+    });
+
+    // Handle confirm delete
+    confirmDeleteBtn?.addEventListener(
+      "click",
+      async function (this: HTMLButtonElement) {
+        if (!orderToDelete) return;
+
+        // Show loading state
+        this.disabled = true;
+        this.textContent = "Deleting...";
+
+        try {
+          const response = await fetch(
+            `/api/orders/${orderToDelete.id}/delete`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+            }
+          );
+
+          const result = await response.json();
+
+          if (result.success) {
+            toastManager.show("Order deleted successfully!", "success");
+
+            // Close modal
+            deleteModal?.close();
+
+            // Reload page after short delay to refresh the order list and totals
+            setTimeout(() => {
+              window.location.reload();
+            }, 1000);
+          } else {
+            throw new Error(result.error || "Failed to delete order");
+          }
+        } catch (error: any) {
+          console.error("Delete error:", error);
+          toastManager.show(
+            error.message || "Failed to delete order. Please try again.",
+            "error"
+          );
+        } finally {
+          // Reset button state
+          this.disabled = false;
+          this.textContent = "Delete Order";
+        }
+      }
+    );
+  }
+
+  // Initialize when DOM is ready
+  document.addEventListener("DOMContentLoaded", initCustomerDetailPage);
+
+  // For Astro View Transitions
+  document.addEventListener("astro:page-load", initCustomerDetailPage);
+</script>

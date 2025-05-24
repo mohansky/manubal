@@ -1,0 +1,87 @@
+---
+// src/components/AddToCartButton.astro
+interface Props {
+  id: number | string;
+  name: string;
+  price: number;
+  image?: string;
+  className?: string;
+  variant?: "primary" | "secondary" | "outline" | "ghost";
+  size?: "lg" | "md" | "sm" | "xs";
+}
+
+const { 
+  id, 
+  name, 
+  price, 
+  image, 
+  className = "", 
+  variant = "primary",
+  size = "md"
+} = Astro.props;
+
+const variantClass = 
+  variant === "primary" ? "btn-primary" : 
+  variant === "secondary" ? "btn-secondary" : 
+  variant === "outline" ? "btn-outline" :
+  variant === "ghost" ? "btn-ghost" : "btn-primary";
+
+const sizeClass = 
+  size === "lg" ? "btn-lg" : 
+  size === "md" ? "" : 
+  size === "sm" ? "btn-sm" :
+  size === "xs" ? "btn-xs" : "";
+---
+
+<button 
+  class={`add-to-cart btn ${variantClass} ${sizeClass} ${className}`}
+  data-id={id.toString()}
+  data-name={name}
+  data-price={price}
+  data-image={image}
+  aria-label="Add to cart"
+>
+  <slot>Add to Cart</slot>
+</button>
+
+<script>
+  import { addToCart } from '../stores/CartStore';
+  
+  // Initialize add-to-cart buttons
+  function initAddToCartButtons() {
+    const buttons = document.querySelectorAll('.add-to-cart');
+    
+    buttons.forEach(button => {
+      button.addEventListener('click', (e) => {
+        e.preventDefault(); // Prevent navigation when clicking the button
+        e.stopPropagation(); // Stop event from bubbling up
+        
+        const target = e.currentTarget as HTMLButtonElement;
+        const id = target.dataset.id;
+        const name = target.dataset.name;
+        const price = parseFloat(target.dataset.price || '0');
+        const image = target.dataset.image;
+        
+        if (id && name) {
+          addToCart({ id, name, price, image });
+          
+          // Show feedback
+          const originalText = target.innerHTML;
+          target.textContent = 'Added!';
+          target.classList.add('btn-success');
+          
+          setTimeout(() => {
+            target.innerHTML = originalText;
+            target.classList.remove('btn-success');
+          }, 1000);
+        }
+      });
+    });
+  }
+  
+  // Initialize when DOM is ready
+  document.addEventListener('DOMContentLoaded', initAddToCartButtons);
+  
+  // For Astro View Transitions
+  document.addEventListener('astro:page-load', initAddToCartButtons);
+</script>

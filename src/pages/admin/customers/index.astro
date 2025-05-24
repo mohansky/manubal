@@ -1,0 +1,187 @@
+---
+// src/pages/admin/customers/index.astro
+import Container from "@/components/ui/Container.astro"; 
+import Layout from "@/layouts/Layout.astro";
+import ProfileLayout from "@/layouts/ProfileLayout.astro";
+import { getAllCustomers } from "@/lib/customers";
+
+// Fetch all customers
+const customers = await getAllCustomers();
+
+// Format date from ISO string
+function formatDate(dateString: string) {
+  const date = new Date(dateString);
+  return date.toLocaleString("en-IN", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+// Format currency
+function formatCurrency(amount: number) {
+  return `₹${amount.toFixed(2)}`;
+}
+---
+
+<Layout title="Customer Management">
+  <ProfileLayout title="Customer Management">
+     <Container width="marginy">
+
+       <div class="bg-white shadow overflow-hidden sm:rounded-md">
+         <div
+           class="px-4 py-5 border-b border-gray-200 sm:px-6 flex justify-between items-center"
+         >
+           <div>
+             <h3 class="text-lg leading-6 font-medium text-gray-900">
+               Total number of Customers - {customers.length}
+             </h3>
+             <p class="mt-1 text-sm text-gray-500">
+               View and manage all customer accounts
+             </p>
+           </div>
+   
+           <div class="w-64">
+             <input
+               type="text"
+               id="customer-search"
+               placeholder="Search customers..."
+               class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
+             />
+           </div>
+         </div>
+   
+         {
+           customers.length === 0 ? (
+             <div class="p-6 text-center text-gray-500">No customers found</div>
+           ) : (
+             <div class="overflow-x-auto">
+               <table class="table">
+                 <thead class="bg-base-200">
+                   <tr>
+                     <th
+                       scope="col"
+                       class="text-xs font-medium text-gray-500 uppercase tracking-wider"
+                     >
+                       Customer
+                     </th>
+                     <th
+                       scope="col"
+                       class="text-xs font-medium text-gray-500 uppercase tracking-wider"
+                     >
+                       Contact
+                     </th>
+                     <th
+                       scope="col"
+                       class="text-xs font-medium text-gray-500 uppercase tracking-wider"
+                     >
+                       Location
+                     </th>
+                     <th
+                       scope="col"
+                       class="text-xs font-medium text-gray-500 uppercase tracking-wider"
+                     >
+                       Orders
+                     </th>
+                     <th
+                       scope="col"
+                       class="text-xs font-medium text-gray-500 uppercase tracking-wider"
+                     >
+                       Total Spent
+                     </th>
+                     <th
+                       scope="col"
+                       class="text-xs font-medium text-gray-500 uppercase tracking-wider"
+                     >
+                       Actions
+                     </th>
+                   </tr>
+                 </thead>
+                 {customers.map((customer) => (
+                   <tr class="hover:bg-base-200">
+                     <td>
+                       <div class="flex items-center">
+                         <div class="avatar avatar-placeholder">
+                           <div class="ring-primary ring-offset-base-100 w-10 rounded-full ring-[0.5px]">
+                             <span class="text-gray-500 font-light">
+                               {customer.firstName[0]}
+                               {customer.lastName[0]}
+                             </span>
+                           </div>
+                         </div>
+                         <div class="ml-4">
+                           <div class="text-sm font-medium text-gray-900 customer-name">
+                             {customer.firstName} {customer.lastName}
+                           </div>
+                           <div class="text-xs opacity-40 text-balance">
+                             Customer since {formatDate(customer.createdAt)}
+                           </div>
+                         </div>
+                       </div>
+                     </td>
+                     <td>
+                       <div class="text-sm text-gray-900 customer-email">
+                         {customer.email}
+                       </div>
+                     </td>
+                     <td>
+                       <div class="text-sm text-gray-900">
+                         {customer.city}, {customer.state}
+                       </div>
+                     </td>
+                     <td>{customer.orderCount}</td>
+                     <td>{formatCurrency(customer.totalSpent)}</td>
+                     <td>
+                       <a
+                         href={`/admin/customers/${customer.id}`}
+                         class="btn btn-primary"
+                       >
+                         View
+                       </a>
+                     </td>
+                   </tr>
+                 ))}
+                 {/* </tbody> */}
+               </table>
+             </div>
+           )
+         }
+       </div>
+     </Container>
+  </ProfileLayout>
+</Layout>
+
+<script>
+  // Simple client-side search functionality
+  function initCustomerSearch() {
+    const searchInput = document.getElementById("customer-search");
+    if (!searchInput) return;
+
+    searchInput.addEventListener("input", (e) => {
+      const searchTerm = (e.target as HTMLInputElement).value.toLowerCase();
+      const rows = document.querySelectorAll(".customer-row");
+
+      rows.forEach((row) => {
+        const nameElement = row.querySelector(".customer-name");
+        const emailElement = row.querySelector(".customer-email");
+
+        if (!nameElement || !emailElement) return;
+
+        const name = nameElement.textContent?.toLowerCase() || "";
+        const email = emailElement.textContent?.toLowerCase() || "";
+
+        if (name.includes(searchTerm) || email.includes(searchTerm)) {
+          (row as HTMLElement).style.display = "";
+        } else {
+          (row as HTMLElement).style.display = "none";
+        }
+      });
+    });
+  }
+
+  // Initialize when DOM is ready
+  document.addEventListener("DOMContentLoaded", initCustomerSearch);
+
+  // For Astro View Transitions
+  document.addEventListener("astro:page-load", initCustomerSearch);
+</script>

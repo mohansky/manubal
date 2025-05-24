@@ -1,0 +1,290 @@
+---
+// src/components/CartSidebar.astro
+import CartItem from "./CartItem.astro";
+
+interface Props {
+  className?: string;
+}
+
+const { className = "" } = Astro.props;
+---
+
+<div class="drawer drawer-end z-40">
+  <input id="cart-drawer" type="checkbox" class="drawer-toggle" />
+  <div class="drawer-side">
+    <label for="cart-drawer" aria-label="close sidebar" class="drawer-overlay"
+    ></label>
+    <div
+      class={`drawer-content bg-base-100 w-80 md:w-96 flex flex-col h-full ${className}`}
+    >
+      <div
+        class="sticky top-0 z-20 bg-base-100 bg-opacity-90 backdrop-blur p-4 border-b border-base-300 flex justify-between items-center"
+      >
+        <h2 class="text-xl font-bold">Your Cart</h2>
+        <label for="cart-drawer" class="btn btn-sm btn-circle btn-ghost"
+          >✕</label
+        >
+      </div>
+
+      <div id="cart-items" class="flex-grow overflow-auto p-4">
+        <div id="empty-cart-message" class="hidden text-center py-8 opacity-50">
+          Your cart is empty
+        </div>
+
+        <div id="cart-items-container">
+          <!-- Cart items will be dynamically rendered here -->
+        </div>
+      </div>
+
+      <div
+        class="sticky bottom-0 z-20 bg-base-100 bg-opacity-90 backdrop-blur border-t border-base-300 p-4"
+      >
+        <div class="flex justify-between mb-4">
+          <span class="font-medium">Totals:</span>
+          <span id="cart-total" class="font-bold text-lg">₹0.00</span>
+        </div>
+
+        <a href="/checkout" class="btn btn-primary w-full"> Checkout </a>
+
+        <label for="cart-drawer" class="btn btn-ghost w-full mt-2">
+          Continue Shopping
+        </label>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+import { cartItems, getCartTotal, removeFromCart, updateQuantity } from "@/stores/CartStore";
+
+ 
+
+  let cartItemsContainer: HTMLElement | null;
+  let emptyCartMessage: HTMLElement | null;
+  let cartTotalElement: HTMLElement | null;
+  let cartDrawerCheckbox: HTMLInputElement | null;
+
+  function initCartSidebar() {
+    cartItemsContainer = document.getElementById("cart-items-container");
+    emptyCartMessage = document.getElementById("empty-cart-message");
+    cartTotalElement = document.getElementById("cart-total");
+    cartDrawerCheckbox = document.getElementById(
+      "cart-drawer"
+    ) as HTMLInputElement;
+
+    if (!cartItemsContainer || !emptyCartMessage || !cartTotalElement) {
+      console.error("Could not find one or more cart elements");
+      return;
+    }
+
+    // Render initial cart state
+    renderCart();
+
+    // Subscribe to cart changes
+    cartItems.listen(renderCart);
+
+    // Add global open cart function
+    window.openCart = openCart;
+  }
+
+  function openCart() {
+    if (!cartDrawerCheckbox) return;
+
+    cartDrawerCheckbox.checked = true;
+
+    // Render cart on open
+    renderCart();
+  }
+
+  // Define the initCartItemControls function that was missing
+  function initCartItemControls() {
+    if (!cartItemsContainer) return;
+
+    // Increment buttons
+    cartItemsContainer
+      .querySelectorAll(".increment-quantity")
+      .forEach((button) => {
+        button.addEventListener("click", (e) => {
+          const item = (e.currentTarget as HTMLElement).closest(
+            "[data-item-id]"
+          );
+          if (!item) return;
+
+          const id = item.getAttribute("data-item-id") as string;
+          const quantityDisplay = item.querySelector(".quantity-display");
+          if (!quantityDisplay) return;
+
+          const currentQuantity = parseInt(quantityDisplay.textContent || "0");
+          updateQuantity(id, currentQuantity + 1);
+
+          // UI update for reactivity without page reload
+          quantityDisplay.textContent = (currentQuantity + 1).toString();
+          updateCartItemTotal(item, currentQuantity + 1);
+        });
+      });
+
+    // Decrement buttons
+    cartItemsContainer
+      .querySelectorAll(".decrement-quantity")
+      .forEach((button) => {
+        button.addEventListener("click", (e) => {
+          const item = (e.currentTarget as HTMLElement).closest(
+            "[data-item-id]"
+          );
+          if (!item) return;
+
+          const id = item.getAttribute("data-item-id") as string;
+          const quantityDisplay = item.querySelector(".quantity-display");
+          if (!quantityDisplay) return;
+
+          const currentQuantity = parseInt(quantityDisplay.textContent || "0");
+          if (currentQuantity > 1) {
+            updateQuantity(id, currentQuantity - 1);
+
+            // UI update for reactivity without page reload
+            quantityDisplay.textContent = (currentQuantity - 1).toString();
+            updateCartItemTotal(item, currentQuantity - 1);
+          }
+        });
+      });
+
+    // Remove buttons
+    cartItemsContainer.querySelectorAll(".remove-item").forEach((button) => {
+      button.addEventListener("click", (e) => {
+        const item = (e.currentTarget as HTMLElement).closest("[data-item-id]");
+        if (!item) return;
+
+        const id = item.getAttribute("data-item-id") as string;
+        removeFromCart(id);
+
+        // UI update for reactivity without page reload
+        item.remove();
+        updateCartTotal();
+      });
+    });
+  }
+
+  function updateCartItemTotal(item: Element, quantity: number) {
+    const priceEl = item.querySelector(".opacity-70");
+    if (!priceEl) return;
+
+    const priceText = priceEl.textContent || "";
+    const match = priceText.match(/₹(\d+\.\d+)/);
+    if (!match) return;
+
+    const price = parseFloat(match[1]);
+    const totalPrice = price * quantity;
+
+    const totalEl = item.querySelector(".font-bold");
+    if (totalEl) {
+      totalEl.textContent = `₹${totalPrice.toFixed(2)}`;
+    }
+
+    updateCartTotal();
+  }
+
+  function updateCartTotal() {
+    if (!cartTotalElement) return;
+
+    // Recalculate total by summing item totals
+    let newTotal = 0;
+    document.querySelectorAll("[data-item-id]").forEach((item) => {
+      const totalPriceEl = item.querySelector(".font-bold");
+      if (totalPriceEl) {
+        const totalPrice = parseFloat(
+          totalPriceEl.textContent?.replace("₹", "") || "0"
+        );
+        newTotal += totalPrice;
+      }
+    });
+
+    cartTotalElement.textContent = `₹${newTotal.toFixed(2)}`;
+  }
+
+  function renderCart() {
+    if (!cartItemsContainer || !emptyCartMessage || !cartTotalElement) return;
+
+    const items = cartItems.get();
+    const total = getCartTotal();
+
+    // Update cart total
+    cartTotalElement.textContent = `₹${total.toFixed(2)}`;
+
+    // Clear current items
+    cartItemsContainer.innerHTML = "";
+
+    // Show empty message or render items
+    if (items.length === 0) {
+      emptyCartMessage.classList.remove("hidden");
+      cartItemsContainer.classList.add("hidden");
+    } else {
+      emptyCartMessage.classList.add("hidden");
+      cartItemsContainer.classList.remove("hidden");
+
+      // Render each item
+      items.forEach((item) => {
+        const itemElement = document.createElement("div");
+        itemElement.className =
+          "flex flex-col sm:flex-row items-center gap-4 py-4 border-b border-base-300 last:border-0";
+        itemElement.setAttribute("data-item-id", item.id);
+
+        itemElement.innerHTML = `         
+          <div class="flex-grow">
+            <h3 class="font-medium">${item.name}</h3>
+            <p class="text-sm opacity-70">₹${item.price.toFixed(2)} each</p>
+          </div>
+          
+          <div class="flex items-center">
+            <button 
+              class="decrement-quantity btn btn-circle btn-sm btn-ghost"
+              aria-label="Decrease quantity"
+            >
+              <span class="sr-only">Decrease</span>
+              <span aria-hidden="true">-</span>
+            </button>
+            
+            <span class="quantity-display mx-2 w-8 text-center">${item.quantity}</span>
+            
+            <button 
+              class="increment-quantity btn btn-circle btn-sm btn-ghost"
+              aria-label="Increase quantity"
+            >
+              <span class="sr-only">Increase</span>
+              <span aria-hidden="true">+</span>
+            </button>
+          </div>
+          
+          <div class="text-right">
+            <p class="font-bold">₹${(item.price * item.quantity).toFixed(2)}</p>
+            <button 
+              class="remove-item btn btn-ghost btn-xs text-error"
+              aria-label="Remove item"
+            >
+              Remove
+            </button>
+          </div>
+        `;
+
+        if (cartItemsContainer) {
+          cartItemsContainer.appendChild(itemElement);
+        }
+      });
+
+      // Initialize controls for the newly rendered items
+      initCartItemControls();
+    }
+  }
+
+  // Initialize when DOM is ready
+  document.addEventListener("DOMContentLoaded", initCartSidebar);
+
+  // For Astro View Transitions
+  document.addEventListener("astro:page-load", initCartSidebar);
+
+  // Add to window for global access
+  declare global {
+    interface Window {
+      openCart: () => void;
+    }
+  }
+</script>

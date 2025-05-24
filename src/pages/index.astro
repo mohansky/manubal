@@ -1,0 +1,40 @@
+---
+// src/pages/index.astro
+import Intro from "@/components/Sections/Intro.astro"; 
+import Heading from "@/components/ui/Heading.astro";
+import People from "@/components/Sections/People.astro";
+import ProductList from "@/components/Product/ProductList.astro";
+
+import { getCollection, type CollectionEntry } from "astro:content";
+import Container from "@/components/ui/Container.astro";
+import Layout from "@/layouts/Layout.astro";
+
+let productEntries: CollectionEntry<"products">[] = [];
+try {
+  productEntries = await getCollection("products");
+  // console.log("Products found:", productEntries.length);
+} catch (error) {
+  console.error("Error loading products collection:", error);
+}
+
+const publishedProducts = productEntries.filter(
+  (entry) => entry.data.published === true
+);
+
+const n = 3;
+const randomProducts = publishedProducts 
+  .map((x) => ({ x, r: Math.random() }))
+  .sort((a, b) => a.r - b.r)
+  .map((a) => a.x)
+  .slice(0, n);
+---
+
+<Layout>
+  <Intro />
+  <Container width="marginx"> 
+      <Heading size="xl" class="mb-5">The craft</Heading>
+      <ProductList products={randomProducts} /> 
+  </Container>
+
+  <People />
+</Layout>

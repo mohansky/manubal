@@ -1,0 +1,67 @@
+---
+import { getUser } from "@/lib/auth-utils";
+ 
+const user = await getUser(Astro);
+---
+  
+  
+    <div class="drawer lg:drawer-open">
+    <input id="my-drawer" type="checkbox" class="drawer-toggle" />
+    <div class="drawer-content "> 
+      <slot />
+      <label for="my-drawer" class="btn btn-primary drawer-button fixed top-15 lg:hidden">Open drawer</label>
+    </div>
+    <div class="drawer-side ">
+      <label for="my-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
+      {user ? ( 
+          <ul tabindex="0" class="menu bg-base-200 text-base-content min-h-full w-60 py-18 px-4 space-y-2">
+            <li class="flex flex-rowitems-center">
+              <div tabindex="0" role="button" class="avatar avatar-placeholder">
+            <div class="bg-neutral text-neutral-content w-10 rounded-full"> 
+              {!user.image ? (
+                <img src={user.image} alt={user.name} />
+              ) : (
+<span class="text-xl capitalize">{user.name?.charAt(0) || 'U'}</span>
+              )} 
+          </div>
+        <p class="ml-3">
+          {user.name}
+
+        
+        </p>
+        </div>
+        </li>
+            <li><span class="text-sm opacity-60">{user.email}</span></li>
+            <li><a href="/admin/dashboard">Dashboard</a></li>
+            <li><a href="/admin/profile">Profile</a></li>
+            <li><a href="/admin/settings">Settings</a></li>
+            <li><a href="/admin/analytics">Analytics</a></li>
+            <li><a href="/admin/orders">Orders</a></li>
+            <li><a href="/admin/customers">Customers</a></li>
+            <li><button id="logoutBtn" class="btn btn-error"> Logout</button></li>
+          </ul>  
+      ) : (
+        <div class="space-x-2">
+          <a href="/login" class="btn btn-ghost">Sign In</a>
+          <a href="/register" class="btn btn-primary">Sign Up</a>
+        </div>
+      )}
+    </div>
+  </div> 
+
+
+{user && (
+  <script>
+    document.getElementById('logoutBtn')?.addEventListener('click', async () => {
+      try {
+        await fetch('/api/auth/sign-out', {
+          method: 'POST',
+          credentials: 'include',
+        });
+        window.location.href = '/';
+      } catch (error) {
+        console.error('Logout failed:', error);
+      }
+    });
+  </script>
+)}

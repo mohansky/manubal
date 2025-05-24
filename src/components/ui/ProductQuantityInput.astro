@@ -1,0 +1,137 @@
+---
+// src/components/ProductQuantityInput.astro
+// For product detail pages to add items with specific quantities
+
+interface Props {
+  id: number | string;
+  name: string;
+  price: number;
+  image?: string;
+  className?: string;
+  buttonVariant?: "primary" | "secondary" | "outline" | "ghost";
+  buttonSize?: "lg" | "md" | "sm" | "xs";
+}
+
+const { 
+  id, 
+  name, 
+  price, 
+  image, 
+  className = "", 
+  buttonVariant = "primary",
+  buttonSize = "md"
+} = Astro.props;
+
+const variantClass = 
+  buttonVariant === "primary" ? "btn-primary" : 
+  buttonVariant === "secondary" ? "btn-secondary" : 
+  buttonVariant === "outline" ? "btn-outline" :
+  buttonVariant === "ghost" ? "btn-ghost" : "btn-primary";
+
+const sizeClass = 
+  buttonSize === "lg" ? "btn-lg" : 
+  buttonSize === "md" ? "" : 
+  buttonSize === "sm" ? "btn-sm" :
+  buttonSize === "xs" ? "btn-xs" : "";
+---
+
+<div class={`product-quantity-input flex items-center gap-2 ${className}`}>
+  <div class="join">
+    <button type="button" class="quantity-decrease join-item btn btn-outline">-</button>
+    <input 
+      type="number" 
+      min="1" 
+      value="1" 
+      class="quantity-input join-item input input-bordered w-16 text-center" 
+    />
+    <button type="button" class="quantity-increase join-item btn btn-outline">+</button>
+  </div>
+  
+  <button 
+    class={`add-to-cart-with-quantity btn ${variantClass} ${sizeClass}`}
+    data-id={id.toString()}
+    data-name={name}
+    data-price={price}
+    data-image={image}
+    aria-label="Add to cart"
+  >
+    <slot>Add to Cart</slot>
+  </button>
+</div>
+
+<script>
+import { addToCart } from "@/stores/CartStore";
+
+ 
+  
+  function initQuantityInputs() {
+    document.querySelectorAll('.product-quantity-input').forEach(container => {
+      const decreaseButton = container.querySelector('.quantity-decrease');
+      const increaseButton = container.querySelector('.quantity-increase');
+      const quantityInput = container.querySelector('.quantity-input') as HTMLInputElement;
+      const addButton = container.querySelector('.add-to-cart-with-quantity');
+      
+      if (!decreaseButton || !increaseButton || !quantityInput || !addButton) return;
+      
+      // Decrease quantity button
+      decreaseButton.addEventListener('click', () => {
+        const currentValue = parseInt(quantityInput.value);
+        if (currentValue > 1) {
+          quantityInput.value = (currentValue - 1).toString();
+        }
+      });
+      
+      // Increase quantity button
+      increaseButton.addEventListener('click', () => {
+        const currentValue = parseInt(quantityInput.value);
+        quantityInput.value = (currentValue + 1).toString();
+      });
+      
+      // Add to cart with quantity
+      addButton.addEventListener('click', (e) => {
+        e.preventDefault();
+        
+        const target = e.currentTarget as HTMLButtonElement;
+        const id = target.dataset.id;
+        const name = target.dataset.name;
+        const price = parseFloat(target.dataset.price || '0');
+        const image = target.dataset.image;
+        const quantity = parseInt(quantityInput.value);
+        
+        if (id && name && quantity >= 1) {
+          // Add the item with the specified quantity
+          for (let i = 0; i < quantity; i++) {
+            addToCart({ id, name, price, image });
+          }
+          
+          // Show feedback
+          const originalText = target.innerHTML;
+          target.textContent = `${quantity} Added!`;
+          target.classList.add('btn-success');
+          
+          setTimeout(() => {
+            target.innerHTML = originalText;
+            target.classList.remove('btn-success');
+          }, 1500);
+          
+          // Reset quantity
+          quantityInput.value = '1';
+        }
+      });
+      
+      // Ensure quantity input only accepts positive integers
+      quantityInput.addEventListener('input', () => {
+        const value = parseInt(quantityInput.value);
+        if (isNaN(value) || value < 1) {
+          quantityInput.value = '1';
+        }
+      });
+    });
+  }
+  
+  // Initialize when DOM is ready
+  document.addEventListener('DOMContentLoaded', initQuantityInputs);
+  
+  // For Astro View Transitions
+  document.addEventListener('astro:page-load', initQuantityInputs);
+</script>

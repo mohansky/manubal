@@ -1,0 +1,37 @@
+---
+import { Icon } from "astro-icon/components";
+import Paragraph from "../ui/Paragraph.astro";
+
+interface Product {
+  dimensions: string;
+  weight: number;
+  artisan: string;
+}
+
+interface Props {
+  product: Product;
+}
+
+const { product } = Astro.props;
+const { dimensions, weight, artisan } = product;
+---
+
+<div class="flex gap-6 flex-wrap">
+  <Paragraph class="flex items-center gap-2">
+    <Icon name="fa6-solid:ruler-horizontal" />
+    <b>Dimensions:</b>
+    {dimensions} cm
+  </Paragraph>
+  <Paragraph class="flex items-center gap-2">
+    <Icon name="fa6-solid:scale-balanced" />
+    <b>Weight:</b>
+    {weight} g.
+  </Paragraph>
+</div>
+
+<div>
+  <Paragraph class="my-3">
+    <b>Artisan:</b>
+    {artisan}
+  </Paragraph>
+</div>
