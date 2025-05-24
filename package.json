@@ -14,6 +14,7 @@
   "dependencies": {
     "@ascorbic/csv-loader": "^2.0.3",
     "@astrojs/mdx": "^4.2.1",
+    "@astrojs/netlify": "^6.3.4",
     "@astrojs/node": "^9.2.1",
     "@astrojs/react": "^4.2.7",
     "@formatjs/intl-numberformat": "^8.15.4",
