@@ -1,7 +1,6 @@
 ---
-import CartSidebar from '../ui/CartSidebar.astro';
-import MiniCart from '../ui/MiniCart.astro';
- 
+import CartSidebar from "../ui/CartSidebar.astro";
+import MiniCart from "../ui/MiniCart.astro";
 
 interface NavLink {
   text: string;
@@ -89,83 +88,86 @@ const currentPath = Astro.url.pathname;
   <div class="drawer-content flex flex-col">
     <div
       id="navbar"
-      class="bg-primary items-center z-10 w-full fixed top-0 shadow-none transition-transform px-2 py-0"
+      class="bg-primary items-center z-10 w-full fixed top-0 shadow-none transition-transform px-2 py-3 lg:py-0"
     >
-    <div class="mx-auto flex justify-between items-center sm:max-w-xl md:max-w-4xl lg:max-w-5xl xl:max-w-6xl 2xl:max-w-7xl ">
+      <div
+        class="mx-auto flex justify-between items-center w-full lg:max-w-5xl xl:max-w-6xl 2xl:max-w-7xl"
+      >
+        <div class="">
+          <a href="/" class="text-xl">
+            <div class="h-auto">
+              <span>
+                <h1>
+                  <b>MANO</b>BAL
+                </h1>
+              </span>
+            </div>
 
-      <div class="">
-        <a href="/" class="text-xl">
-          <div class="h-auto">
-            <span>
-              <h1>
-                <b>MANO</b>BAL
-              </h1>
-            </span>
+            <p class="sr-only">MANOBAL</p>
+          </a>
+        </div>
+
+        <div class="flex gap-3 lg:hidden">
+          <div class="flex items-center gap-4">
+            <MiniCart />
+            <CartSidebar />
           </div>
-
-          <p class="sr-only">MANOBAL</p>
-        </a>
-      </div>
-
-      <div class="flex-none lg:hidden">
-        <label
-          for="my-drawer-3"
-          aria-label="open sidebar"
-          class="btn btn-circle btn-ghost"
-        >
-          <span class="sr-only">Open menu</span>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            class="h-5 w-5"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
+          <label
+            for="my-drawer-3"
+            aria-label="open sidebar"
+            class="btn btn-circle btn-ghost"
           >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M4 6h16M4 12h16M4 18h7"></path>
-          </svg>
-        </label>
-      </div>
+            <span class="sr-only">Open menu</span>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-5 w-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M4 6h16M4 12h16M4 18h7"></path>
+            </svg>
+          </label>
+        </div>
 
-      <div class="hidden flex-none lg:block">
-        <ul class="menu menu-horizontal py-0 w-full" id="my-drawer-3">
-          {
-            links.map(({ text, link }) => {
-              const isActive =
-                currentPath === link ||
-                (link !== "/" && currentPath.startsWith(link));
-              return (
-                <li class="ml-5">
-                  <a
-                    href={link}
-                    title={`Go to ${text}`}
-                    class={`rounded-none py-5 uppercase font-semibold ${isActive ? "border-b-4" : "hover:border-b-4"} focus:border-b-4 active:border-b-4`}
-                    aria-current={isActive ? "page" : undefined}
-                  >
-                    {text}
-                  </a>
-                </li>
-              );
-            })
-          }
-          <div class="mr-4 flex items-center gap-4">
-             <MiniCart />
-             <CartSidebar/>
-
-            <!-- <ThemeToggle /> -->
-          </div>
-        </ul>
+        <div class="hidden flex-none lg:block">
+          <ul class="menu menu-horizontal py-0 w-full" id="my-drawer-3">
+            {
+              links.map(({ text, link }) => {
+                const isActive =
+                  currentPath === link ||
+                  (link !== "/" && currentPath.startsWith(link));
+                return (
+                  <li class="ml-5">
+                    <a
+                      href={link}
+                      title={`Go to ${text}`}
+                      class={`rounded-none py-5 uppercase font-semibold ${isActive ? "border-b-4" : "hover:border-b-4"} focus:border-b-4 active:border-b-4`}
+                      aria-current={isActive ? "page" : undefined}
+                    >
+                      {text}
+                    </a>
+                  </li>
+                );
+              })
+            }
+            <div class="mr-4 flex items-center gap-4">
+              <MiniCart />
+              <CartSidebar />
+            </div>
+          </ul>
+        </div>
       </div>
-    </div>
     </div>
     <!-- Page content here -->
   </div>
 
-  <div class="drawer-side z-30">
-    <div class="menu bg-base-200 min-h-full w-full" aria-label="Navigation">
+  <div class="drawer-side z-30 py-3">
+    <div class="menu bg-primary min-h-full w-full px-2" aria-label="Navigation">
       <a href="/" class="text-xl">
         <div class="w-20 h-auto">
           <span>
@@ -182,7 +184,7 @@ const currentPath = Astro.url.pathname;
         for="my-drawer-3"
         aria-label="close sidebar"
         aria-labelledby="close-menu-label"
-        class="absolute top-10 right-5 drawer-overlay z-30 btn btn-circle"
+        class="absolute top-0 right-0 mr-2 drawer-overlay z-30 btn btn-circle"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -198,6 +200,7 @@ const currentPath = Astro.url.pathname;
           ><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg
         >
       </label>
+
       <ul class="space-y-10 pt-10" aria-label="Navigation">
         {
           links.map(({ text, link }) => {
