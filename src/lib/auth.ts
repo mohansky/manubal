@@ -5,12 +5,12 @@ import { db } from "./db";
 import { sendPasswordResetEmail } from "./email";
 
 function getBaseURL() {
-  if (process.env.BETTER_AUTH_URL) {
-    return process.env.BETTER_AUTH_URL;
+  if (import.meta.env.BETTER_AUTH_URL) {
+    return import.meta.env.BETTER_AUTH_URL;
   }
 
-  if (process.env.NETLIFY_URL) {
-    return process.env.NETLIFY_URL;
+  if (import.meta.env.PUBLIC_BETTER_AUTH_URL) {
+    return import.meta.env.PUBLIC_BETTER_AUTH_URL;
   }
 
   return "http://localhost:4321";
