@@ -9,7 +9,7 @@
 @plugin "daisyui/theme" {
   name: "manobal";
   default: true;
-  prefersdark: false;
+  prefersdark: true;
   color-scheme: "light";
   --color-base-100: oklch(98% 0.002 247.839);
   --color-base-200: oklch(92% 0.006 264.531);
