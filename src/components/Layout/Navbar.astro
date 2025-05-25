@@ -1,5 +1,4 @@
 ---
-import CartSidebar from "../ui/CartSidebar.astro";
 import MiniCart from "../ui/MiniCart.astro";
 
 interface NavLink {
@@ -12,8 +11,7 @@ interface Props {
 }
 
 const { links } = Astro.props;
-
-// Get the current path to determine active link
+ 
 const currentPath = Astro.url.pathname;
 ---
 
@@ -24,8 +22,7 @@ const currentPath = Astro.url.pathname;
     "my-drawer-3"
   ) as HTMLInputElement;
   const drawerSide = document.querySelector(".drawer-side") as HTMLElement;
-
-  // Fade-in/out effect for drawer
+ 
   if (drawerToggle && drawerSide) {
     drawerToggle.addEventListener("change", () => {
       if (drawerToggle.checked) {
@@ -53,20 +50,6 @@ const currentPath = Astro.url.pathname;
       navbar?.classList.remove("-translate-y-full");
     }
     lastScrollTop = scrollTop;
-
-    // For changing background color after the hero section
-    // Assuming the hero section height is 100vh, change this value as needed
-    // const heroSectionHeight = window.innerHeight; // 100vh
-
-    // if (scrollTop > heroSectionHeight) {
-    //   navbar?.classList.add("bg-primary");
-    //   navbar?.classList.add("shadow-md");
-    //   navbar?.classList.remove("bg-primary");
-    // } else {
-    //   navbar?.classList.remove("bg-primary");
-    //   navbar?.classList.remove("shadow-md");
-    //   navbar?.classList.add("bg-primary");
-    // }
   });
 </script>
 
@@ -107,11 +90,9 @@ const currentPath = Astro.url.pathname;
           </a>
         </div>
 
+        <!-- Mobile Menu -->
         <div class="flex gap-3 lg:hidden">
-          <div class="flex items-center gap-4">
-            <MiniCart />
-            <CartSidebar />
-          </div>
+          <MiniCart />
           <label
             for="my-drawer-3"
             aria-label="open sidebar"
@@ -134,39 +115,43 @@ const currentPath = Astro.url.pathname;
           </label>
         </div>
 
+        <!-- Desktop Menu -->
         <div class="hidden flex-none lg:block">
-          <ul class="menu menu-horizontal py-0 w-full" id="my-drawer-3">
-            {
-              links.map(({ text, link }) => {
-                const isActive =
-                  currentPath === link ||
-                  (link !== "/" && currentPath.startsWith(link));
-                return (
-                  <li class="ml-5">
-                    <a
-                      href={link}
-                      title={`Go to ${text}`}
-                      class={`rounded-none py-5 uppercase font-semibold ${isActive ? "border-b-4" : "hover:border-b-4"} focus:border-b-4 active:border-b-4`}
-                      aria-current={isActive ? "page" : undefined}
-                    >
-                      {text}
-                    </a>
-                  </li>
-                );
-              })
-            }
-            <div class="mr-4 flex items-center gap-4">
+          <div class="flex items-center">
+            <ul class="menu menu-horizontal py-0">
+              {
+                links.map(({ text, link }) => {
+                  const isActive =
+                    currentPath === link ||
+                    (link !== "/" && currentPath.startsWith(link));
+                  return (
+                    <li class="ml-5">
+                      <a
+                        href={link}
+                        title={`Go to ${text}`}
+                        class={`rounded-none py-5 uppercase font-semibold ${isActive ? "border-b-4" : "hover:border-b-4"} focus:border-b-4 active:border-b-4`}
+                        aria-current={isActive ? "page" : undefined}
+                      >
+                        {text}
+                      </a>
+                    </li>
+                  );
+                })
+              }
+            </ul>
+            <div class="ml-6 flex items-center gap-4">
               <MiniCart />
-              <CartSidebar />
             </div>
-          </ul>
+          </div>
         </div>
       </div>
     </div>
     <!-- Page content here -->
   </div>
 
+  <!-- Mobile Navigation Drawer -->
   <div class="drawer-side z-30 py-3">
+    <label for="my-drawer-3" aria-label="close sidebar" class="drawer-overlay"></label>
     <div class="menu bg-primary min-h-full w-full px-2" aria-label="Navigation">
       <a href="/" class="text-xl">
         <div class="w-20 h-auto">
@@ -184,7 +169,7 @@ const currentPath = Astro.url.pathname;
         for="my-drawer-3"
         aria-label="close sidebar"
         aria-labelledby="close-menu-label"
-        class="absolute top-0 right-0 mr-2 drawer-overlay z-30 btn btn-circle"
+        class="absolute top-0 right-0 mr-2 z-30 btn btn-circle"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -221,8 +206,7 @@ const currentPath = Astro.url.pathname;
               </li>
             );
           })
-        }
-        <!-- <ThemeToggle /> -->
+        } 
       </ul>
     </div>
   </div>

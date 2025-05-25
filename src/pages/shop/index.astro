@@ -7,8 +7,7 @@ import { getCollection, type CollectionEntry } from "astro:content";
 
 let productEntries: CollectionEntry<'products'>[] = [];
 try {
-  productEntries = await getCollection("products");
-  console.log("Products found:", productEntries.length);
+  productEntries = await getCollection("products"); 
 } catch (error) {
   console.error("Error loading products collection:", error);
 }

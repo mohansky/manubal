@@ -1,6 +1,7 @@
 ---
 import Footer from "@/components/Layout/Footer.astro";
 import Navbar from "@/components/Layout/Navbar.astro";
+import CartSidebar from "@/components/ui/CartSidebar.astro";
 import "@/styles/global.css"; 
 
 import { getCollection } from "astro:content";
@@ -169,6 +170,8 @@ const site = siteInfo;
   <body>
  
     <Navbar links={site.links} />
+      <!-- Cart Sidebar - OUTSIDE of navbar -->
+    <CartSidebar />
     <slot />
     <Footer
       author={site.author}
