@@ -29,7 +29,7 @@ export async function requireAuth(context: APIContext) {
   return user;
 }
 
-export async function redirectIfAuthenticated(context: APIContext, redirectTo = '/dashboard') {
+export async function redirectIfAuthenticated(context: APIContext, redirectTo = '/admin/dashboard') {
   const user = await getUser(context);
   
   if (user) {
