@@ -1,4 +1,4 @@
---- 
+---
 import Container from "@/components/ui/Container.astro";
 import Layout from "@/layouts/Layout.astro";
 import ProfileLayout from "@/layouts/ProfileLayout.astro";
@@ -17,86 +17,117 @@ if (!user.emailVerified) {
 
 <Layout title="Profile Settings">
   <ProfileLayout>
-    <Container width="marginy"> 
-        <div class="max-w-2xl mx-auto">
-          <div class="breadcrumbs text-sm mb-6">
-            <ul>
-              <li><a href="/dashboard">Dashboard</a></li>
-              <li>Profile Settings</li>
-            </ul>
+    <Container width="marginy">
+      <div class="max-w-2xl mx-auto">
+        <div class="breadcrumbs text-sm mb-6">
+          <ul>
+            <li><a href="/admin/dashboard">Dashboard</a></li>
+            <li>Profile Settings</li>
+          </ul>
+        </div>
+
+        <div class="card bg-base-100 shadow-xl">
+          <div class="card-body">
+            <h2 class="card-title mb-6">Profile Information</h2>
+
+            <form id="profileForm" class="space-y-6">
+              <div class="form-control">
+                <label class="label">
+                  <span class="label-text">Full Name</span>
+                </label>
+                <input
+                  type="text"
+                  name="name"
+                  value={user.name}
+                  class="input input-bordered w-full"
+                  required
+                />
+              </div>
+
+              <div class="form-control">
+                <label class="label">
+                  <span class="label-text">Email Address</span>
+                </label>
+                <input
+                  type="email"
+                  value={user.email}
+                  class="input input-bordered w-full"
+                  disabled
+                />
+                <label class="label">
+                  <span class="label-text-alt">Email cannot be changed</span>
+                </label>
+              </div>
+
+              <div class="form-control">
+                <label class="label">
+                  <span class="label-text">Profile Image URL (Optional)</span>
+                </label>
+                <input
+                  type="url"
+                  name="image"
+                  value={user.image || ""}
+                  placeholder="https://example.com/avatar.jpg"
+                  class="input input-bordered w-full"
+                />
+              </div>
+
+              <div id="successAlert" class="alert alert-success hidden">
+                <span id="successMessage">Profile updated successfully!</span>
+              </div>
+
+              <div id="errorAlert" class="alert alert-error hidden">
+                <span id="errorMessage"></span>
+              </div>
+
+              <div class="card-actions justify-end space-x-2">
+                <a href="/admin/dashboard" class="btn btn-ghost">Cancel</a>
+                <button type="submit" id="submitBtn" class="btn btn-primary">
+                  Save Changes
+                </button>
+              </div>
+            </form>
           </div>
-
-          <div class="card bg-base-100 shadow-xl">
-            <div class="card-body">
-              <h2 class="card-title mb-6">Profile Information</h2>
-
-              <form id="profileForm" class="space-y-6">
-                <div class="form-control">
-                  <label class="label">
-                    <span class="label-text">Full Name</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="name"
-                    value={user.name}
-                    class="input input-bordered w-full"
-                    required
-                  />
-                </div>
-
-                <div class="form-control">
-                  <label class="label">
-                    <span class="label-text">Email Address</span>
-                  </label>
-                  <input
-                    type="email"
-                    value={user.email}
-                    class="input input-bordered w-full"
-                    disabled
-                  />
-                  <label class="label">
-                    <span class="label-text-alt">Email cannot be changed</span>
-                  </label>
-                </div>
-
-                <div class="form-control">
-                  <label class="label">
-                    <span class="label-text">Profile Image URL (Optional)</span>
-                  </label>
-                  <input
-                    type="url"
-                    name="image"
-                    value={user.image || ""}
-                    placeholder="https://example.com/avatar.jpg"
-                    class="input input-bordered w-full"
-                  />
-                </div>
-
-                <div id="successAlert" class="alert alert-success hidden">
-                  <span id="successMessage">Profile updated successfully!</span>
-                </div>
-
-                <div id="errorAlert" class="alert alert-error hidden">
-                  <span id="errorMessage"></span>
-                </div>
-
-                <div class="card-actions justify-end space-x-2">
-                  <a href="/dashboard" class="btn btn-ghost">Cancel</a>
-                  <button type="submit" id="submitBtn" class="btn btn-primary">
-                    Save Changes
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div> 
+        </div>
+      </div>
     </Container>
   </ProfileLayout>
 </Layout>
- 
 
-<script> 
-import { authClient } from "@/lib/auth-client";
+<script>
+  // TypeScript-safe version with proper error handling
+  import { updateUser } from "@/lib/auth-client";
+
+  // Define types for Better Auth response
+  interface BetterAuthResponse<T = any> {
+    data?: T;
+    error?:
+      | {
+          code?: string;
+          message?: string;
+        }
+      | string;
+  }
+
+  function getErrorMessage(error: unknown): string {
+    if (typeof error === "string") {
+      return error;
+    }
+
+    if (error && typeof error === "object") {
+      if ("message" in error && typeof error.message === "string") {
+        return error.message;
+      }
+
+      // Handle Better Auth error structure
+      if ("code" in error || "message" in error) {
+        const msg = (error as any).message;
+        return typeof msg === "string" ? msg : "An error occurred";
+      }
+    }
+
+    return "An unknown error occurred";
+  }
 
   document
     .getElementById("profileForm")
@@ -126,20 +157,38 @@ import { authClient } from "@/lib/auth-client";
       successAlert.classList.add("hidden");
 
       try {
-        const { data, error } = await authClient.updateUser({
-          name,
-          image: image || undefined,
-        });
+        console.log("Attempting to update user with:", { name, image });
 
-        if (data && !error) {
+        // Prepare update data
+        const updateData: { name: string; image?: string } = { name };
+        if (image && image.trim() !== "") {
+          updateData.image = image;
+        }
+
+        // Call updateUser and cast to expected response type
+        const result = (await updateUser(updateData)) as BetterAuthResponse;
+
+        console.log("Update result:", result);
+
+        // Check for success
+        if (result?.data && !result?.error) {
           successAlert.classList.remove("hidden");
           setTimeout(() => window.location.reload(), 1500);
+        } else if (result?.error) {
+          const errorMsg = getErrorMessage(result.error);
+          console.error("Update failed:", result.error);
+          errorMessage.textContent = errorMsg;
+          errorAlert.classList.remove("hidden");
         } else {
-          errorMessage.textContent = error?.message || "Update failed";
+          // Fallback for unexpected response format
+          console.error("Unexpected response format:", result);
+          errorMessage.textContent = "Update failed with unexpected response";
           errorAlert.classList.remove("hidden");
         }
-      } catch (error) {
-        errorMessage.textContent = "An error occurred. Please try again.";
+      } catch (error: unknown) {
+        console.error("Profile update error:", error);
+        const errorMsg = getErrorMessage(error);
+        errorMessage.textContent = errorMsg;
         errorAlert.classList.remove("hidden");
       } finally {
         submitBtn.classList.remove("loading");

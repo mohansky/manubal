@@ -6,7 +6,7 @@ import type { APIRoute } from 'astro';
 
 export const GET: APIRoute = async () => {
   try {
-    console.log('API: Starting monthly stats query...');
+    // console.log('API: Starting monthly stats query...');
     
     const result = await rawDb.execute({
       sql: `
@@ -21,7 +21,7 @@ export const GET: APIRoute = async () => {
       `
     });
 
-    console.log('API: Query result rows:', result.rows);
+    // console.log('API: Query result rows:', result.rows);
 
     const monthlyData = result.rows.map(row => ({
       month: String(row.month),
@@ -29,7 +29,7 @@ export const GET: APIRoute = async () => {
       totalRevenue: Number(row.total_revenue)
     }));
 
-    console.log('API: Formatted data:', monthlyData);
+    // console.log('API: Formatted data:', monthlyData);
 
     return new Response(JSON.stringify(monthlyData, null, 2), {
       status: 200,

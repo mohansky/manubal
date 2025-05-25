@@ -1,32 +1,29 @@
-// import { createAuthClient } from "better-auth/client";
-
-// export const authClient = createAuthClient({
-//   baseURL: "http://localhost:4321",
-// });
-
-// export const { signIn, signUp, signOut, updateUser, useSession } = authClient;
-
-
+// src/lib/auth-client.ts - Simple approach
 import { createAuthClient } from "better-auth/client";
 
-// Dynamic URL detection for both dev and production
-function getAuthURL() {
-  // 1. Check for explicit public environment variable
-  if (import.meta.env.PUBLIC_BETTER_AUTH_URL) {
-    return import.meta.env.PUBLIC_BETTER_AUTH_URL;
-  }
-  
-  // 2. Auto-detect from current window location (works in browser)
-  if (typeof window !== 'undefined') {
-    return window.location.origin;
-  }
-  
-  // 3. Fallback to localhost for development
-  return 'http://localhost:4321';
-}
+const baseURL = import.meta.env.PUBLIC_BETTER_AUTH_URL || 
+                import.meta.env.BETTER_AUTH_URL || 
+                'http://localhost:4321';
+
+console.log('Using Auth URL:', baseURL);
 
 export const authClient = createAuthClient({
-  baseURL: getAuthURL(),
+  baseURL,
 });
 
 export const { signIn, signUp, signOut, updateUser, useSession } = authClient;
+
+export interface UpdateUserData {
+  name?: string;
+  image?: string;
+}
+
+export interface AuthError {
+  code?: string;
+  message?: string;
+}
+
+export interface AuthResponse<T = any> {
+  data?: T;
+  error?: AuthError | string;
+}

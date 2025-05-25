@@ -1,6 +1,7 @@
 ---
 // src/components/ProductCard.astro
 import AddToCartButton from "../ui/AddToCartButton.astro";
+import Button from "../ui/Button.astro";
 import Heading from "../ui/Heading.astro";
 import Paragraph from "../ui/Paragraph.astro";
 import ImageFeatureSlider from "./ImageFeatureSlider.astro";
@@ -68,8 +69,10 @@ const imagePath = images ? `/products/${images}/1.jpg` : undefined;
         {description}
       </Paragraph>
       <ProductCardPrice total={total} />
-      <div class="card-actions justify-evenly">
-        <a href={slug} class="btn btn-outline"> View Details </a>
+      <div class="card-actions justify-end gap-5">
+        <Button href={slug} variant="outline">
+          View Details 
+        </Button> 
         <AddToCartButton
           id={id}
           name={name}

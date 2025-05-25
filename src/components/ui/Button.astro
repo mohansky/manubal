@@ -31,9 +31,9 @@ const baseClasses =
 const variantClasses = {
   default: "btn-neutral",
   primary:
-    "bg-gradient-to-r from-[#59b51e] to-[#95d239] border-[#59b51e] text-white hover:from-[#59b51e] hover:to-[#95d239] hover:border-[#59b51e] hover:opacity-80",
+    "bg-primary hover:opacity-80",
   outline:
-    "bg-transparent border border-[#59b51e] rounded-full hover:bg-gradient-to-r hover:from-[#59b51e] hover:to-[#95d239] hover:border-[#59b51e] hover:text-black",
+    "bg-transparent text-primary border border-primary hover:bg-primary hover:text-neutral-content hover:opacity-80",
 };
 
 const classes = `${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${className}`;

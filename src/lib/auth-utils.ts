@@ -1,3 +1,4 @@
+// src/lib/auth-utils.ts
 import { auth } from './auth';
 import type { APIContext } from 'astro';
 

@@ -1,21 +1,54 @@
+// src/lib/auth.ts
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { db } from "./db"; // Your existing database connection
+import { db } from "./db";
+import { sendPasswordResetEmail } from "./email";
+
+function getBaseURL() {
+  if (process.env.BETTER_AUTH_URL) {
+    return process.env.BETTER_AUTH_URL;
+  }
+
+  if (process.env.NETLIFY_URL) {
+    return process.env.NETLIFY_URL;
+  }
+
+  return "http://localhost:4321";
+}
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
-    provider: "sqlite", // Turso uses libSQL which is SQLite compatible
+    provider: "sqlite",
   }),
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: false,
+    sendResetPassword: async ({ user, url, token }) => {
+      console.log("Sending password reset email to:", user.email);
+      console.log("Reset URL:", url);
+
+      await sendPasswordResetEmail({
+        to: user.email,
+        resetUrl: url,
+        userName: user.name,
+        token: token,
+      });
+    },
+    resetPasswordTokenExpiresIn: 3600,
+  },
+  // Enable profile updates
+  updateProfile: {
+    enabled: true,
   },
   session: {
-    expiresIn: 60 * 60 * 24 * 7, // 7 days
-    updateAge: 60 * 60 * 24, // 1 day
+    expiresIn: 60 * 60 * 24 * 7,
+    updateAge: 60 * 60 * 24,
   },
+  secret: process.env.BETTER_AUTH_SECRET!,
+  baseURL: getBaseURL(),
+  trustedOrigins: [getBaseURL()],
   advanced: {
-    generateId: () => crypto.randomUUID(), // Ensure proper ID generation
+    generateId: () => crypto.randomUUID(),
   },
 });
 
