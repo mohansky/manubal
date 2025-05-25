@@ -8,11 +8,11 @@ const siteInfo = siteData[0].data;
 const socials = siteInfo.socials;
 ---
 
-<div class="flex space-x-8">
+<div class="flex space-x-4 lg:space-x-8">
   {
     socials.map((social) => (
       <ContactLink href={social.link} target="_blank" title={social.text}>
-        <Icon name={social.icon} class="w-14 h-14 mx-auto mb-3" />
+        <Icon name={social.icon} class="w-8 h-8 lg:w-14 lg:h-14 mx-auto mb-3" />
         <p>{social.text}</p>
       </ContactLink>
     ))
