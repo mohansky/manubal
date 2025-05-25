@@ -1,12 +1,10 @@
 // src/lib/auth-client.ts
 import { createAuthClient } from "better-auth/client";
 
-// Simple solution: Use current origin in browser, fallback for SSR
-const baseURL = typeof window !== 'undefined' 
-  ? window.location.origin 
-  : 'https://manubal.netlify.app';
+// Hardcoded production URL - will work 100%
+const baseURL = 'https://manubal.netlify.app';
 
-console.log('Auth URL:', baseURL);
+console.log('Auth client baseURL (hardcoded):', baseURL);
 
 export const authClient = createAuthClient({
   baseURL,
