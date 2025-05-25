@@ -1,11 +1,34 @@
-// src/lib/auth-client.ts - Simple approach
+// src/lib/auth-client.ts
 import { createAuthClient } from "better-auth/client";
 
-const baseURL = import.meta.env.PUBLIC_BETTER_AUTH_URL || 
-                import.meta.env.BETTER_AUTH_URL || 
-                'http://localhost:4321';
+function getAuthURL() {
+  // Check if we're in production (Netlify or other production environment)
+  if (typeof window !== 'undefined') {
+    // In browser - check the current domain
+    const isProduction = window.location.hostname !== 'localhost' && 
+                        window.location.hostname !== '127.0.0.1';
+    
+    if (isProduction) {
+      // Use current origin for production
+      return window.location.origin;
+    }
+  }
+  
+  // Check for explicit environment variables
+  if (import.meta.env.PUBLIC_BETTER_AUTH_URL) {
+    return import.meta.env.PUBLIC_BETTER_AUTH_URL;
+  }
+  
+  if (import.meta.env.BETTER_AUTH_URL) {
+    return import.meta.env.BETTER_AUTH_URL;
+  }
+  
+  // Development fallback
+  return 'http://localhost:4321';
+}
 
-console.log('Using Auth URL:', baseURL);
+const baseURL = getAuthURL();
+console.log('Auth client using URL:', baseURL);
 
 export const authClient = createAuthClient({
   baseURL,
