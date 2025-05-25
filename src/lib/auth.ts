@@ -13,7 +13,7 @@ function getBaseURL() {
     return import.meta.env.PUBLIC_BETTER_AUTH_URL;
   }
 
-  return "http://localhost:4321";
+  return "https://manubal.netlify.app";
 }
 
 export const auth = betterAuth({
