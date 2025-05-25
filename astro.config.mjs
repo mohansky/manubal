@@ -51,8 +51,8 @@ export default defineConfig({
         optional: false,
       }),
       PUBLIC_BETTER_AUTH_URL: envField.string({
-        context: "server",
-        access: "secret",
+        context: "client",
+        access: "public",
         optional: false,
       }),
     },
