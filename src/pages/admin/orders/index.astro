@@ -1,29 +1,15 @@
 ---
 // src/pages/admin/orders/index.astro
-import Container from "@/components/ui/Container.astro"; 
+import Container from "@/components/ui/Container.astro";
+import Heading from "@/components/ui/Heading.astro";
+import Paragraph from "@/components/ui/Paragraph.astro";
 import Layout from "@/layouts/Layout.astro";
 import ProfileLayout from "@/layouts/ProfileLayout.astro";
+import { formatCurrency, formatDateTime } from "@/lib/helpers";
 import { getAllOrders } from "@/lib/orders";
 
 // Fetch all orders
 const orders = await getAllOrders();
-
-// Format date from ISO string
-function formatDate(dateString: string) {
-  const date = new Date(dateString);
-  return date.toLocaleString("en-IN", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
-
-// Format currency
-function formatCurrency(amount: number) {
-  return `₹${amount.toFixed(2)}`;
-}
 
 // Status badge colors
 const statusColors: Record<string, string> = {
@@ -38,6 +24,15 @@ const statusColors: Record<string, string> = {
 function getStatusColor(status: string): string {
   return statusColors[status] || "bg-gray-100 text-gray-800";
 }
+
+// Get unique statuses for filter dropdown
+const uniqueStatuses = [...new Set(orders.map(order => order.status))];
+
+// Calculate status counts
+const statusCounts = orders.reduce((acc, order) => {
+  acc[order.status] = (acc[order.status] || 0) + 1;
+  return acc;
+}, {} as Record<string, number>);
 ---
 
 <Layout>
@@ -45,12 +40,101 @@ function getStatusColor(status: string): string {
     <Container width="marginy">
       <div class="card">
         <div class="card-body">
-          <h3 class="text-lg leading-6 font-medium text-gray-900">
-            Orders ({orders.length})
-          </h3>
-          <p class="mt-1 text-sm text-gray-500">
-            View and manage all customer orders
-          </p>
+          <div class="flex flex-col gap-6">
+            <!-- Order Statistics -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <!-- Total Orders and Revenue -->
+              <div class="stats shadow">
+                <div class="stat">
+                  <Heading size="xxs" fontweight="light" class="opacity-50"
+                    >Total Orders</Heading
+                  > 
+                  <Heading size="xl" fontweight="bold" class="text-info"
+                    ><span id="orders-count">{orders.length}</span></Heading
+                  > 
+                  <div class="mt-3">
+                    <Heading size="xxs" fontweight="light" class="opacity-50"
+                    >Total Revenue</Heading
+                  > 
+                    <Heading size="xl" fontweight="bold" class="text-accent">
+                      
+                    <span id="orders-total" class="font-semibold">
+                      {
+                        formatCurrency(
+                          orders.map((order) => order.total).reduce((a, b) => a + b, 0)
+                        )
+                      }
+                    </span>
+                    </Heading>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Status Breakdown -->
+              <div class="stats shadow">
+                <div class="stat">
+                  <Heading size="xxs" fontweight="light" class="opacity-50"
+                    >Orders by Status</Heading
+                  >
+                  <div class="stat-value text-sm grid lg:grid-cols-3 gap-6 mt-2">
+                    {Object.entries(statusCounts).map(([status, count]) => (
+                      <div class="flex bg-base-200 p-2 rounded-sm items-center justify-between">
+                        <div class={`capitalize badge badge-lg font-normal ${getStatusColor(status)}`}>
+                          {status}
+                        </div>
+                        <span class="text-base-content/70" data-status-count={status}>
+                          {count}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Filters and Controls -->
+            <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+              <Paragraph size="xs" class="opacity-50"> 
+                View and manage all customer orders
+              </Paragraph>            
+            <!-- Filters and Controls -->
+            <div class="flex flex-col sm:flex-row gap-6 font-quicksand">
+              <!-- Status Filter -->
+              <div class="form-control">
+                <label class="label">
+                  <Paragraph size="xs">Filter by Status</Paragraph>
+                </label>
+                <select id="status-filter" class="select select-bordered select-sm w-full sm:w-auto">
+                  <option value="">All Statuses</option>
+                  {uniqueStatuses.map(status => (
+                    <option value={status} class="capitalize">{status}</option>
+                  ))}
+                </select>
+              </div>
+              
+              <!-- Date Sort -->
+              <div class="form-control">
+                <label class="label">
+                  <Paragraph size="xs">Sort by Date</Paragraph> 
+                </label>
+                <select id="date-sort" class="select select-bordered select-sm w-full sm:w-auto">
+                  <option value="desc">Newest First</option>
+                  <option value="asc">Oldest First</option>
+                </select>
+              </div>
+              
+              <!-- Reset Filters -->
+              <div class="form-control">
+                <label class="label">
+                  <span class="label-text text-xs">&nbsp;</span>
+                </label>
+                <button id="reset-filters" class="btn btn-outline btn-sm">
+                  Reset
+                </button>
+              </div>
+            </div>
+          </div>
+          </div>
         </div>
 
         {
@@ -59,15 +143,16 @@ function getStatusColor(status: string): string {
           ) : (
             <div class="overflow-x-auto">
               <table class="table">
-                {/* <!-- head --> */}
                 <thead>
-                  <tr class="bg-base-200">
+                  <tr class="bg-base-200 font-quicksand">
                     <th class="max-w-max" />
                     <th
                       scope="col"
-                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-base-300"
+                      id="date-header"
                     >
-                      Date
+                      Date 
+                      <span id="date-sort-indicator" class="ml-1">↓</span>
                     </th>
                     <th
                       scope="col"
@@ -101,11 +186,17 @@ function getStatusColor(status: string): string {
                     </th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody id="orders-tbody" class="font-quicksand">
                   {orders.map((order) => (
-                    <tr class="hover:bg-base-300/10">
+                    <tr 
+                      class="hover:bg-base-300/10 order-row" 
+                      data-order-id={order.id}
+                      data-status={order.status}
+                      data-date={order.createdAt}
+                      data-total={order.total}
+                    >
                       <th class="max-w-10">Order #{order.id}</th>
-                      <td class="max-w-10"> {formatDate(order.createdAt)}</td>
+                      <td class="max-w-10">{formatDateTime(order.createdAt)}</td>
                       <td>
                         <div
                           class={`capitalize badge ${getStatusColor(order.status)}`}
@@ -118,7 +209,7 @@ function getStatusColor(status: string): string {
                         {order.itemCount}{" "}
                         {order.itemCount === 1 ? "item" : "items"}
                       </td>
-                      <td> {formatCurrency(order.total)}</td>
+                      <td>{formatCurrency(order.total)}</td>
                       <td>
                         <div class="flex gap-2">
                           <a
@@ -140,6 +231,11 @@ function getStatusColor(status: string): string {
                   ))}
                 </tbody>
               </table>
+              
+              <!-- No Results Message (hidden by default) -->
+              <div id="no-results" class="p-6 text-center text-gray-500 hidden">
+                No orders match the current filters
+              </div>
             </div>
           )
         }
@@ -243,8 +339,193 @@ function getStatusColor(status: string): string {
     }
   }
 
+  // Orders Management Class
+  class OrdersManager {
+    private allRows: HTMLTableRowElement[];
+    private currentSort: 'asc' | 'desc' = 'desc';
+    private currentStatusFilter: string = '';
+
+    constructor() {
+      this.allRows = Array.from(document.querySelectorAll('.order-row')) as HTMLTableRowElement[];
+      this.initializeFilters();
+      this.updateStats();
+    }
+
+    private initializeFilters(): void {
+      const statusFilter = document.getElementById('status-filter') as HTMLSelectElement;
+      const dateSortSelect = document.getElementById('date-sort') as HTMLSelectElement;
+      const dateHeader = document.getElementById('date-header');
+      const resetBtn = document.getElementById('reset-filters');
+
+      // Status filter
+      statusFilter?.addEventListener('change', (e) => {
+        this.currentStatusFilter = (e.target as HTMLSelectElement).value;
+        this.applyFilters();
+      });
+
+      // Date sort select
+      dateSortSelect?.addEventListener('change', (e) => {
+        this.currentSort = (e.target as HTMLSelectElement).value as 'asc' | 'desc';
+        this.sortByDate();
+        this.updateSortIndicator();
+      });
+
+      // Date header click
+      dateHeader?.addEventListener('click', () => {
+        this.currentSort = this.currentSort === 'desc' ? 'asc' : 'desc';
+        dateSortSelect.value = this.currentSort;
+        this.sortByDate();
+        this.updateSortIndicator();
+      });
+
+      // Reset button
+      resetBtn?.addEventListener('click', () => {
+        this.resetFilters();
+      });
+
+      // Initial sort
+      this.sortByDate();
+      this.updateSortIndicator();
+    }
+
+    private applyFilters(): void {
+      let visibleRows = this.allRows;
+
+      // Filter by status
+      if (this.currentStatusFilter) {
+        visibleRows = visibleRows.filter(row => 
+          row.dataset.status === this.currentStatusFilter
+        );
+      }
+
+      // Hide all rows first
+      this.allRows.forEach(row => row.style.display = 'none');
+
+      // Show filtered rows
+      visibleRows.forEach(row => row.style.display = '');
+
+      // Show/hide no results message
+      const noResults = document.getElementById('no-results');
+      const table = document.querySelector('table');
+      
+      if (visibleRows.length === 0) {
+        noResults?.classList.remove('hidden');
+        table?.classList.add('hidden');
+      } else {
+        noResults?.classList.add('hidden');
+        table?.classList.remove('hidden');
+      }
+
+      this.updateStats(visibleRows);
+    }
+
+    private sortByDate(): void {
+      const tbody = document.getElementById('orders-tbody');
+      if (!tbody) return;
+
+      const sortedRows = [...this.allRows].sort((a, b) => {
+        const dateA = new Date(a.dataset.date || '');
+        const dateB = new Date(b.dataset.date || '');
+        
+        if (this.currentSort === 'desc') {
+          return dateB.getTime() - dateA.getTime();
+        } else {
+          return dateA.getTime() - dateB.getTime();
+        }
+      });
+
+      // Clear tbody and re-append sorted rows
+      tbody.innerHTML = '';
+      sortedRows.forEach(row => tbody.appendChild(row));
+
+      // Reapply filters after sorting
+      this.applyFilters();
+    }
+
+    private updateSortIndicator(): void {
+      const indicator = document.getElementById('date-sort-indicator');
+      if (indicator) {
+        indicator.textContent = this.currentSort === 'desc' ? '↓' : '↑';
+      }
+    }
+
+    private updateStats(visibleRows?: HTMLTableRowElement[]): void {
+      const rows = visibleRows || this.allRows.filter(row => row.style.display !== 'none');
+      
+      const ordersCount = document.getElementById('orders-count');
+      const ordersTotal = document.getElementById('orders-total');
+
+      if (ordersCount) {
+        ordersCount.textContent = rows.length.toString();
+      }
+
+      if (ordersTotal) {
+        const total = rows.reduce((sum, row) => {
+          const rowTotal = parseFloat(row.dataset.total || '0');
+          return sum + rowTotal;
+        }, 0);
+        
+        // Format currency similar to the server-side function
+        const formattedTotal = `₹ ${total.toLocaleString("en-IN", { 
+          minimumFractionDigits: 2, 
+          maximumFractionDigits: 2 
+        })}`;
+        
+        ordersTotal.textContent = formattedTotal;
+      }
+
+      // Update status counts
+      this.updateStatusCounts(rows);
+    }
+
+    private updateStatusCounts(visibleRows: HTMLTableRowElement[]): void {
+      // Calculate status counts for visible rows
+      const statusCounts: Record<string, number> = {};
+      
+      visibleRows.forEach(row => {
+        const status = row.dataset.status || '';
+        statusCounts[status] = (statusCounts[status] || 0) + 1;
+      });
+
+      // Update each status count in the UI
+      Object.keys(statusCounts).forEach(status => {
+        const countElement = document.querySelector(`[data-status-count="${status}"]`);
+        if (countElement) {
+          countElement.textContent = statusCounts[status].toString();
+        }
+      });
+
+      // Set count to 0 for statuses not in visible rows
+      document.querySelectorAll('[data-status-count]').forEach(element => {
+        const status = element.getAttribute('data-status-count') || '';
+        if (!statusCounts[status]) {
+          element.textContent = '0';
+        }
+      });
+    }
+
+    private resetFilters(): void {
+      const statusFilter = document.getElementById('status-filter') as HTMLSelectElement;
+      const dateSortSelect = document.getElementById('date-sort') as HTMLSelectElement;
+
+      // Reset form values
+      if (statusFilter) statusFilter.value = '';
+      if (dateSortSelect) dateSortSelect.value = 'desc';
+
+      // Reset internal state
+      this.currentStatusFilter = '';
+      this.currentSort = 'desc';
+
+      // Apply changes
+      this.sortByDate();
+      this.updateSortIndicator();
+    }
+  }
+
   function initOrdersPage() {
     const toastManager = new ToastManager();
+    const ordersManager = new OrdersManager();
+    
     const deleteModal = document.getElementById(
       "delete_modal"
     ) as HTMLDialogElement;

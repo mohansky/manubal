@@ -1,7 +1,7 @@
 ---
-import Container from "@/components/ui/Container.astro";
 import Layout from "@/layouts/Layout.astro";
 import ProfileLayout from "@/layouts/ProfileLayout.astro";
+import Container from "@/components/ui/Container.astro";
 import { getUser } from "@/lib/auth-utils";
 
 const user = await getUser(Astro);

@@ -4,30 +4,54 @@ import { getUser } from "@/lib/auth-utils";
 const user = await getUser(Astro);
 ---
 
-<div class="drawer lg:drawer-open">
+<div class="drawer lg:drawer-open font-quicksand">
   <input id="my-drawer" type="checkbox" class="drawer-toggle" />
-  
-  <!-- Main content area -->
+
   <div class="drawer-content">
     <slot />
     <label 
       for="my-drawer" 
-      class="btn btn-ghost drawer-button fixed top-10 left-4 lg:hidden z-50"
+      class="btn btn-ghost drawer-button fixed top-18 left-0 lg:hidden z-50"
     >
-     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-panel-left-open-icon lucide-panel-left-open"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/><path d="m14 9 3 3-3 3"/></svg>
+    <svg 
+        id="drawer-icon" 
+        xmlns="http://www.w3.org/2000/svg" 
+        width="24" 
+        height="24" 
+        viewBox="0 0 24 24" 
+        fill="none" 
+        stroke="currentColor" 
+        stroke-width="2" 
+        stroke-linecap="round" 
+        stroke-linejoin="round" 
+        class="transition-transform duration-200"
+      >
+        <!-- Default: Panel Open (when drawer is closed) -->
+        <g id="open-icon">
+          <rect width="18" height="18" x="3" y="3" rx="2"/>
+          <path d="M9 3v18"/>
+          <path d="m14 9 3 3-3 3"/>
+        </g>
+        <!-- Close icon (when drawer is open) -->
+        <g id="close-icon" class="hidden">
+          <rect width="18" height="18" x="3" y="3" rx="2"/>
+          <path d="M9 3v18"/>
+          <path d="m16 9-3 3 3 3"/>
+        </g>
+      </svg>
+     <!-- <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-panel-left-open-icon lucide-panel-left-open"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/><path d="m14 9 3 3-3 3"/></svg> -->
     </label>
   </div>
   
   <!-- Sidebar -->
   <div class="drawer-side">
     <label for="my-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
-    
     {user ? (
       <aside class="menu bg-base-200 text-base-content min-h-full w-82 py-20 px-4">
         {/* <!-- User Profile Section --> */}
         <div class="mb-6 p-4 bg-base-100 rounded-lg shadow-sm">
           <div class="flex items-center space-x-3">
-            <div class="avatar">
+            <div class="avatar avatar-online">
               <div class="w-12 h-12 rounded-full bg-primary text-primary-content flex items-center justify-center">
                 {user.image ? (
                   <img 
@@ -188,3 +212,28 @@ const user = await getUser(Astro);
     });
   </script>
 )}
+
+<script>
+  // Handle drawer toggle icon changes
+  const drawerCheckbox = document.getElementById('my-drawer') as HTMLInputElement;
+  const openIcon = document.getElementById('open-icon');
+  const closeIcon = document.getElementById('close-icon');
+  
+  function updateDrawerIcon() {
+    if (drawerCheckbox?.checked) {
+      // Drawer is open - show close icon
+      openIcon?.classList.add('hidden');
+      closeIcon?.classList.remove('hidden');
+    } else {
+      // Drawer is closed - show open icon
+      openIcon?.classList.remove('hidden');
+      closeIcon?.classList.add('hidden');
+    }
+  }
+  
+  // Listen for checkbox changes
+  drawerCheckbox?.addEventListener('change', updateDrawerIcon);
+  
+  // Set initial state
+  updateDrawerIcon();
+</script>

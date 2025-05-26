@@ -1,15 +1,14 @@
 ---
 // src/pages/admin/orders/[id].astro
-import Container from "@/components/ui/Container.astro"; 
+import Container from "@/components/ui/Container.astro";
 import Layout from "@/layouts/Layout.astro";
 import ProfileLayout from "@/layouts/ProfileLayout.astro";
+import { formatCurrency, formatDate } from "@/lib/helpers";
 import { getOrderById, updateOrderStatus } from "@/lib/orders";
 
-// Get order ID from URL
 const { id } = Astro.params;
 const orderId = parseInt(id || "0");
 
-// Handle status update
 let message = "";
 if (Astro.request.method === "POST") {
   try {
@@ -26,35 +25,14 @@ if (Astro.request.method === "POST") {
   }
 }
 
-// Fetch order details
 const order = await getOrderById(orderId);
 
-// Redirect if order not found
 if (!order) {
   return Astro.redirect("/admin/orders");
 }
 
-// Format date
-function formatDate(dateString: string) {
-  const date = new Date(dateString);
-  return date.toLocaleString("en-IN", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
-
-// Format currency
-function formatCurrency(amount: number) {
-  return `₹${amount.toFixed(2)}`;
-}
-
-// Available statuses
 const statuses = ["pending", "processing", "shipped", "delivered", "cancelled"];
 
-// Status badge classes for DaisyUI
 const statusBadges: Record<string, string> = {
   pending: "badge-warning",
   processing: "badge-info",
@@ -63,7 +41,6 @@ const statusBadges: Record<string, string> = {
   cancelled: "badge-error",
 };
 
-// Function to get status badge class with fallback
 function getStatusBadge(status: string): string {
   return statusBadges[status] || "badge-neutral";
 }
@@ -72,7 +49,6 @@ function getStatusBadge(status: string): string {
 <Layout>
   <ProfileLayout title={`Details for Order #${order.id}`}>
     <Container width="marginy">
-      <!-- Success/Error Alert -->
       {
         message && (
           <div class="alert alert-success mb-4">
@@ -95,7 +71,6 @@ function getStatusBadge(status: string): string {
       }
 
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <!-- Order Header Card -->
         <div class="card bg-base-100 shadow-sm">
           <div class="card-body">
             <div
@@ -140,7 +115,6 @@ function getStatusBadge(status: string): string {
           </div>
         </div>
 
-        <!-- Customer Information -->
         <div class="card bg-base-100 shadow-sm mt-6">
           <div class="card-body">
             <h3 class="card-title mb-4">Customer Information</h3>
@@ -183,135 +157,131 @@ function getStatusBadge(status: string): string {
           </div>
         </div>
       </div>
-   
 
-    <!-- Order Items -->
-    <div class="card bg-base-100 shadow-sm mt-6">
-      <div class="card-body">
-        <h3 class="card-title mb-4">Order Items</h3>
+      <div class="card bg-base-100 shadow-sm mt-6">
+        <div class="card-body">
+          <h3 class="card-title mb-4">Order Items</h3>
 
-        <div class="overflow-x-auto">
-          <table class="table">
-            <thead class="bg-base-200/30">
-              <tr>
-                <th
-                  scope="col"
-                  class="text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >Product</th
-                >
-                <th
-                  scope="col"
-                  class="text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >Price</th
-                >
-                <th
-                  scope="col"
-                  class="text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >Quantity</th
-                >
-                <!-- <th
+          <div class="overflow-x-auto">
+            <table class="table">
+              <thead class="bg-base-200/30">
+                <tr>
+                  <th
+                    scope="col"
+                    class="text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >Product</th
+                  >
+                  <th
+                    scope="col"
+                    class="text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >Price</th
+                  >
+                  <th
+                    scope="col"
+                    class="text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >Quantity</th
+                  >
+                  <!-- <th
                 scope="col"
                 class="text-xs font-medium text-gray-500 uppercase tracking-wider"
                 >Tax</th
               > -->
-                <th
-                  scope="col"
-                  class="text-xs text-right font-medium text-gray-500 uppercase tracking-wider"
-                  >Total</th
-                >
-              </tr>
-            </thead>
-            <tbody>
-              {
-                order.items.map((item) => (
-                  <tr class="hover:bg-base-200/30">
-                    <td>
-                      <div>
-                        <div class="font-medium">{item.productName}</div>
-                        <div class="text-sm text-base-content/70">
-                          ID: {item.productId}
+                  <th
+                    scope="col"
+                    class="text-xs text-right font-medium text-gray-500 uppercase tracking-wider"
+                    >Total</th
+                  >
+                </tr>
+              </thead>
+              <tbody>
+                {
+                  order.items.map((item) => (
+                    <tr class="hover:bg-base-200/30">
+                      <td>
+                        <div>
+                          <div class="font-medium">{item.productName}</div>
+                          <div class="text-sm text-base-content/70">
+                            ID: {item.productId}
+                          </div>
                         </div>
-                      </div>
-                    </td>
-                    <td>{formatCurrency(item.price)}</td>
-                    <td>{item.quantity}</td>
-                    {/* <td>{formatCurrency(item.price * 0.05)}</td> */}
-                    <td class="text-right font-medium">
-                      {/* {formatCurrency(item.price + item.price * 0.05)} */}
-                      {formatCurrency(item.total)}
-                    </td>
-                  </tr>
-                ))
-              }
-            </tbody>
-          </table>
-        </div>
+                      </td>
+                      <td>{formatCurrency(item.price)}</td>
+                      <td>{item.quantity}</td>
+                      {/* <td>{formatCurrency(item.price * 0.05)}</td> */}
+                      <td class="text-right font-medium">
+                        {/* {formatCurrency(item.price + item.price * 0.05)} */}
+                        {formatCurrency(item.total)}
+                      </td>
+                    </tr>
+                  ))
+                }
+              </tbody>
+            </table>
+          </div>
 
-        <!-- Order Summary -->
-        <div class="divider"></div>
-        <div class="flex flex-col gap-2 max-w-md ml-auto">
-          <div class="flex justify-between">
-            <span class="text-base-content/70">Subtotal:</span>
-            <span>{formatCurrency(order.subtotal)}</span>
-          </div>
-          <div class="flex justify-between">
-            <span class="text-base-content/70">Shipping:</span>
-            <span>{formatCurrency(order.shipping)}</span>
-          </div>
-          <div class="flex justify-between">
-            <span class="text-base-content/70">Tax:</span>
-            <span>{formatCurrency(order.tax)}</span>
-          </div>
-          <div class="divider my-2"></div>
-          <div class="flex justify-between text-lg font-bold">
-            <span>Total:</span>
-            <span>{formatCurrency(order.total)}</span>
+          <!-- Order Summary -->
+          <div class="divider"></div>
+          <div class="flex flex-col gap-2 max-w-md ml-auto">
+            <div class="flex justify-between">
+              <span class="text-base-content/70">Subtotal:</span>
+              <span>{formatCurrency(order.subtotal)}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-base-content/70">Shipping:</span>
+              <span>{formatCurrency(order.shipping)}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-base-content/70">Tax:</span>
+              <span>{formatCurrency(order.tax)}</span>
+            </div>
+            <div class="divider my-2"></div>
+            <div class="flex justify-between text-lg font-bold">
+              <span>Total:</span>
+              <span>{formatCurrency(order.total)}</span>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+      <div class="flex flex-col sm:flex-row justify-between gap-4 mt-6">
+        <a href="/admin/orders" class="btn btn-soft btn-sm">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-4 w-4 mr-2"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+          </svg>
+          Back to Orders
+        </a>
 
-    <!-- Action Buttons -->
-    <div class="flex flex-col sm:flex-row justify-between gap-4 mt-6">
-      <a href="/admin/orders" class="btn btn-soft btn-sm">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          class="h-4 w-4 mr-2"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
+        <button
+          type="button"
+          onclick="window.print()"
+          class="btn btn-neutral btn-sm"
         >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-        </svg>
-        Back to Orders
-      </a>
-
-      <button
-        type="button"
-        onclick="window.print()"
-        class="btn btn-neutral btn-sm"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          class="h-4 w-4 mr-2"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
-          ></path>
-        </svg>
-        Print Order
-      </button>
-    </div>
-     </Container>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-4 w-4 mr-2"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
+            ></path>
+          </svg>
+          Print Order
+        </button>
+      </div>
+    </Container>
   </ProfileLayout>
 </Layout>

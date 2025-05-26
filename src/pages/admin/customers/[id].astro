@@ -5,6 +5,7 @@ import Heading from "@/components/ui/Heading.astro";
 import Layout from "@/layouts/Layout.astro";
 import ProfileLayout from "@/layouts/ProfileLayout.astro";
 import { getCustomerById } from "@/lib/customers";
+import { formatCurrency, formatDate } from "@/lib/helpers";
 
 // Get customer ID from URL
 const { id } = Astro.params;
@@ -18,22 +19,22 @@ if (!customer) {
   return Astro.redirect("/admin/customers");
 }
 
-// Format date
-function formatDate(dateString: string) {
-  const date = new Date(dateString);
-  return date.toLocaleString("en-IN", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
+// // Format date
+// function formatDate(dateString: string) {
+//   const date = new Date(dateString);
+//   return date.toLocaleString("en-IN", {
+//     day: "numeric",
+//     month: "short",
+//     year: "numeric",
+//     hour: "2-digit",
+//     minute: "2-digit",
+//   });
+// }
 
-// Format currency
-function formatCurrency(amount: number) {
-  return `₹${amount.toFixed(2)}`;
-}
+// // Format currency
+// function formatCurrency(amount: number) {
+//   return `₹${amount.toFixed(2)}`;
+// }
 
 // Calculate total spent
 const totalSpent = customer.orders.reduce((sum, order) => sum + order.total, 0);
@@ -162,7 +163,6 @@ function getStatusColor(status: string): string {
             </div>
 
             <div class="card-body p-0">
-              <!-- View Mode -->
               <div id="customer-view-mode">
                 <dl class="space-y-1">
                   <div class="grid grid-cols-3 bg-base-200 p-5">
@@ -234,7 +234,6 @@ function getStatusColor(status: string): string {
                 </dl>
               </div>
 
-              <!-- Edit Mode -->
               <div id="customer-edit-mode" class="hidden">
                 <form id="customer-edit-form" class="p-5 space-y-4">
                   <div class="form-control">
@@ -559,79 +558,77 @@ function getStatusColor(status: string): string {
         </div>
       </div>
 
-    
-
-    <div class="mt-6">
-      <a href="/admin/customers" class="btn btn-soft btn-sm">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          class="h-4 w-4 mr-2"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-        </svg>
-        Back to Customers
-      </a>
-    </div>
-
-    <!-- Delete Customer Confirmation Modal -->
-    <dialog id="delete_customer_modal" class="modal">
-      <div class="modal-box">
-        <h3 class="font-bold text-lg text-error">Delete Customer</h3>
-        <p class="py-4">
-          Are you sure you want to delete <span class="font-semibold"
-            >{customer.firstName} {customer.lastName}</span
-          >?
-          <br /><br />
-          <span class="text-warning"
-            >⚠️ This action cannot be undone and will permanently remove all
-            customer data.</span
+      <div class="mt-6">
+        <a href="/admin/customers" class="btn btn-soft btn-sm">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-4 w-4 mr-2"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
           >
-          <br /><br />
-          <span class="text-sm text-base-content/70"
-            >Note: You can only delete customers who have no orders. Please
-            delete all orders first if any exist.</span
-          >
-        </p>
-        <div class="modal-action">
-          <form method="dialog">
-            <button class="btn">Cancel</button>
-          </form>
-          <button id="confirm-delete-customer-btn" class="btn btn-error"
-            >Delete Customer</button
-          >
-        </div>
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+          </svg>
+          Back to Customers
+        </a>
       </div>
-    </dialog>
 
-    <!-- Delete Order Confirmation Modal -->
-    <dialog id="delete_modal" class="modal">
-      <div class="modal-box">
-        <h3 class="font-bold text-lg">Confirm Delete</h3>
-        <p class="py-4">
-          Are you sure you want to delete <span
-            id="delete-order-info"
-            class="font-semibold"></span>? This action cannot be undone.
-        </p>
-        <div class="modal-action">
-          <form method="dialog">
-            <button class="btn">Cancel</button>
-          </form>
-          <button id="confirm-delete-btn" class="btn btn-error"
-            >Delete Order</button
-          >
+      <!-- Delete Customer Confirmation Modal -->
+      <dialog id="delete_customer_modal" class="modal">
+        <div class="modal-box">
+          <h3 class="font-bold text-lg text-error">Delete Customer</h3>
+          <p class="py-4">
+            Are you sure you want to delete <span class="font-semibold"
+              >{customer.firstName} {customer.lastName}</span
+            >?
+            <br /><br />
+            <span class="text-warning"
+              >⚠️ This action cannot be undone and will permanently remove all
+              customer data.</span
+            >
+            <br /><br />
+            <span class="text-sm text-base-content/70"
+              >Note: You can only delete customers who have no orders. Please
+              delete all orders first if any exist.</span
+            >
+          </p>
+          <div class="modal-action">
+            <form method="dialog">
+              <button class="btn">Cancel</button>
+            </form>
+            <button id="confirm-delete-customer-btn" class="btn btn-error"
+              >Delete Customer</button
+            >
+          </div>
         </div>
-      </div>
-    </dialog>
+      </dialog>
 
-    <!-- Toast Container -->
-    <div class="toast toast-top toast-end z-50" id="toast-container"></div>
+      <!-- Delete Order Confirmation Modal -->
+      <dialog id="delete_modal" class="modal">
+        <div class="modal-box">
+          <h3 class="font-bold text-lg">Confirm Delete</h3>
+          <p class="py-4">
+            Are you sure you want to delete <span
+              id="delete-order-info"
+              class="font-semibold"></span>? This action cannot be undone.
+          </p>
+          <div class="modal-action">
+            <form method="dialog">
+              <button class="btn">Cancel</button>
+            </form>
+            <button id="confirm-delete-btn" class="btn btn-error"
+              >Delete Order</button
+            >
+          </div>
+        </div>
+      </dialog>
+
+      <!-- Toast Container -->
+      <div class="toast toast-top toast-end z-50" id="toast-container"></div>
     </Container>
   </ProfileLayout>
 </Layout>

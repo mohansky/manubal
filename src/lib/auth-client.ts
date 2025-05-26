@@ -1,13 +1,29 @@
-// src/lib/auth-client.ts
+// src/lib/auth-client.ts - Simple approach
 import { createAuthClient } from "better-auth/client";
 
-// Hardcoded production URL - will work 100%
-const baseURL = 'https://manubal.netlify.app';
+const baseURL = import.meta.env.PUBLIC_BETTER_AUTH_URL || 
+                import.meta.env.BETTER_AUTH_URL || 
+                'http://localhost:4321';
 
-console.log('Auth client baseURL (hardcoded):', baseURL);
+console.log('Using Auth URL:', baseURL);
 
 export const authClient = createAuthClient({
   baseURL,
 });
 
 export const { signIn, signUp, signOut, updateUser, useSession } = authClient;
+
+export interface UpdateUserData {
+  name?: string;
+  image?: string;
+}
+
+export interface AuthError {
+  code?: string;
+  message?: string;
+}
+
+export interface AuthResponse<T = any> {
+  data?: T;
+  error?: AuthError | string;
+}
