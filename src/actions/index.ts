@@ -20,7 +20,7 @@ export const server = {
       console.log("From here:", formData);
       const { data, error } = await resend.emails.send({
         from: "MK <mail@mohankumar.dev>",
-        to: "mohansky@gmail.com",
+        to: [ "mohansky@gmail.com", "reach.maarif@gmail.com" ],
         subject: `Enquiry from ${formData.firstName} ${formData.lastName}`,
         html: `
                 <h2>Enquiry from ${formData.firstName} ${formData.lastName}</h2>
